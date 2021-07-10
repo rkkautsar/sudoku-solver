@@ -74,7 +74,7 @@ func (s *SudokuBoard) Cells() []*Cell {
 }
 
 func (s *SudokuBoard) Row(rowIndex int) []*Cell {
-	row := []*Cell{}
+	row := make([]*Cell, 0, s.LenCols())
 	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
 		if val, exist := s.KnownLookup[fmt.Sprint(rowIndex, colIndex)]; exist {
@@ -86,7 +86,7 @@ func (s *SudokuBoard) Row(rowIndex int) []*Cell {
 }
 
 func (s *SudokuBoard) Column(colIndex int) []*Cell {
-	col := []*Cell{}
+	col := make([]*Cell, 0, s.LenRows())
 	for rowIndex := 0; rowIndex < s.LenRows(); rowIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
 		col = append(col, cell)
@@ -102,7 +102,7 @@ func (s *SudokuBoard) Column(colIndex int) []*Cell {
 func (s *SudokuBoard) Block(blkIndex int) []*Cell {
 	rowStart := (blkIndex / s.Size) * s.Size
 	colStart := (blkIndex % s.Size) * s.Size
-	block := []*Cell{}
+	block := make([]*Cell, 0, s.LenValues())
 
 	for rowIndex := rowStart; rowIndex < rowStart+s.Size; rowIndex++ {
 		for colIndex := colStart; colIndex < colStart+s.Size; colIndex++ {

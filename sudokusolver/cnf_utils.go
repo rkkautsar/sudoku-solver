@@ -1,10 +1,8 @@
 package sudokusolver
 
-import "math"
-
 func cnfAtLeast1(c *CNF, lits []int) [][]int {
 	for _, lit := range lits {
-		if _, exists := c.LitLookup[lit]; exists {
+		if exists := c.lookup(lit); exists {
 			return [][]int{}
 		}
 	}
@@ -15,12 +13,8 @@ func cnfAtLeast1(c *CNF, lits []int) [][]int {
 func cnfAtMost1(c *CNF, lits []int) [][]int {
 	filteredLits := []int{}
 	for _, lit := range lits {
-		if _, exists := c.LitLookup[-lit]; !exists {
+		if exists := c.lookup(-lit); !exists {
 			filteredLits = append(filteredLits, lit)
-		}
-		// assume sat
-		if _, exists := c.LitLookup[lit]; exists {
-			return [][]int{}
 		}
 	}
 
@@ -30,7 +24,7 @@ func cnfAtMost1(c *CNF, lits []int) [][]int {
 }
 
 func cnfExactly1(c *CNF, lits []int) [][]int {
-	result := [][]int{}
+	result := make([][]int, 0, 1+len(lits)*len(lits)/2)
 
 	result = append(result, cnfAtLeast1(c, lits)...)
 	result = append(result, cnfAtMost1(c, lits)...)
@@ -39,7 +33,7 @@ func cnfExactly1(c *CNF, lits []int) [][]int {
 }
 
 func cnfAtMost1Pairwise(c *CNF, lits []int) [][]int {
-	result := [][]int{}
+	result := make([][]int, 0, len(lits)*len(lits)/2)
 	for i := 0; i < len(lits); i++ {
 		for j := i + 1; j < len(lits); j++ {
 			// each pair can't be true at the same time
@@ -58,7 +52,7 @@ func cnfAtMost1Commander(c *CNF, lits []int) [][]int {
 
 	factor := 3
 	m := (len(lits) + factor - 1) / factor
-	result := [][]int{}
+	result := make([][]int, 0, len(lits)*len(lits)/2)
 
 	groups := make([][]int, m)
 	for i := 0; i < m; i++ {
@@ -91,7 +85,7 @@ func cnfAtMost1Commander(c *CNF, lits []int) [][]int {
 func cnfAtMost1Bimander(c *CNF, lits []int) [][]int {
 	factor := 2
 	m := (len(lits) + factor - 1) / factor
-	result := [][]int{}
+	result := make([][]int, 0, len(lits)*len(lits)/2)
 
 	groups := make([][]int, m)
 	for i := 0; i < m; i++ {
@@ -99,7 +93,7 @@ func cnfAtMost1Bimander(c *CNF, lits []int) [][]int {
 		result = append(result, cnfAtMost1Pairwise(c, groups[i])...)
 	}
 
-	binLength := int(math.Ceil(math.Log2(float64(m) / math.Log2(float64(factor)))))
+	binLength := getBinLength(m)
 	auxVars := makeRange(c.nbVar+1, c.nbVar+binLength)
 	c.nbVar += binLength
 
@@ -117,4 +111,15 @@ func cnfAtMost1Bimander(c *CNF, lits []int) [][]int {
 	}
 
 	return result
+}
+
+func getBinLength(m int) int {
+	len := 1
+	for {
+		if m <= len {
+			break
+		}
+		m <<= 1
+	}
+	return len
 }

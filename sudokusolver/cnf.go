@@ -9,12 +9,33 @@ import (
 
 type CNF struct {
 	Board     *sudoku.SudokuBoard
-	LitLookup map[int]bool
 	Clauses   [][]int
+	lits      []int
+	litLookup []uint8
+	lookupLen int
 	nbVar     int
 }
 
 type CNFBuilder = func(c *CNF, lits []int) [][]int
+
+func (c *CNF) addLit(lit int) {
+	c.lits = append(c.lits, lit)
+	if lit < 0 && -lit <= c.lookupLen {
+		c.litLookup[-lit-1] = 2
+	} else if lit > 0 && lit <= c.lookupLen {
+		c.litLookup[lit-1] = 1
+	}
+}
+
+func (c *CNF) lookup(lit int) bool {
+	if lit < 0 && -lit <= c.lookupLen {
+		return c.litLookup[-lit-1] == 2
+	} else if lit > 0 && lit <= c.lookupLen {
+		return c.litLookup[lit-1] == 1
+	}
+
+	return false
+}
 
 func (c *CNF) addClause(clause []int) {
 	c.Clauses = append(c.Clauses, clause)

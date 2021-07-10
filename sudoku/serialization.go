@@ -2,6 +2,7 @@ package sudoku
 
 import (
 	"fmt"
+	"io"
 	"math"
 	"regexp"
 	"strconv"
@@ -114,9 +115,9 @@ func (s *SudokuBoard) Print() {
 	}
 }
 
-func (s *SudokuBoard) PrintOneLine() {
+func (s *SudokuBoard) PrintOneLine(w io.Writer) {
 	for _, cell := range s.Cells() {
-		fmt.Print(cell.Value)
+		fmt.Fprint(w, cell.Value)
 	}
-	fmt.Println()
+	fmt.Fprintln(w)
 }

@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
+	"runtime/pprof"
 	"sort"
 	"strconv"
 	"strings"
@@ -21,6 +23,7 @@ var (
 	isCNFMode    bool
 	isSolveMode  bool
 	isManyMode   bool
+	cpuprofile   string
 	customSolver string
 )
 
@@ -29,10 +32,20 @@ func init() {
 	flag.BoolVar(&isSolveMode, "solve", false, "Solve with SAT solver")
 	flag.BoolVar(&isManyMode, "many", false, "Solve many one-line 9x9 sudoku")
 	flag.StringVar(&customSolver, "solver", "gophersat", "Solve with specified SAT solver [implies -solve if set]")
+	flag.StringVar(&cpuprofile, "cpuprofile", "", "Write CPU profile to a file")
 	flag.Parse()
 }
 
 func main() {
+	if cpuprofile != "" {
+		f, err := os.Create(cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
 	mode := "cnf"
 	if isSolveMode || !isCNFMode {
 		mode = "solve"
@@ -42,10 +55,7 @@ func main() {
 	}
 
 	if isManyMode {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			solve(mode, scanner.Text())
-		}
+		solveMany(mode)
 	} else {
 		bytes, _ := ioutil.ReadAll(os.Stdin)
 		input := string(bytes)
@@ -55,7 +65,12 @@ func main() {
 
 func solve(mode, input string) {
 	board := sudoku.NewFromString(input)
-	cnf := sudokusolver.GenerateCNFConstraints(&board)
+
+	var cnf *sudokusolver.CNF
+
+	if mode != "custom" {
+		cnf = sudokusolver.GenerateCNFConstraints(&board)
+	}
 
 	if mode == "cnf" {
 		cnf.Print(os.Stdout)
@@ -64,13 +79,34 @@ func solve(mode, input string) {
 
 	if mode == "solve" {
 		solveWithGophersat(&board, cnf)
-		return
 	}
 
 	if mode == "custom" {
-		solveWithCustomSolver(&board, cnf, customSolver)
-		return
+		solveWithCustomSolver(&board, customSolver)
 	}
+
+	board.Print()
+}
+
+func solveMany(mode string) {
+	scanner := bufio.NewScanner(os.Stdin)
+	writer := bufio.NewWriter(os.Stdout)
+	for scanner.Scan() {
+		input := scanner.Text()
+		board := sudoku.NewFromString(input)
+
+		if mode == "solve" {
+			cnf := sudokusolver.GenerateCNFConstraints(&board)
+			solveWithGophersat(&board, cnf)
+		}
+
+		if mode == "custom" {
+			solveWithCustomSolver(&board, customSolver)
+		}
+
+		board.PrintOneLine(writer)
+	}
+	writer.Flush()
 }
 
 func solveWithGophersat(board *sudoku.SudokuBoard, cnf *sudokusolver.CNF) {
@@ -84,24 +120,21 @@ func solveWithGophersat(board *sudoku.SudokuBoard, cnf *sudokusolver.CNF) {
 	}
 
 	board.SolveWithModel(s.Model())
-
-	if isManyMode {
-		board.PrintOneLine()
-	} else {
-		board.Print()
-	}
 }
 
-func solveWithCustomSolver(board *sudoku.SudokuBoard, cnf *sudokusolver.CNF, solver string) {
+func solveWithCustomSolver(board *sudoku.SudokuBoard, solver string) {
 	solverArgs := strings.Split(solver, " ")
 	cmd := exec.Command(solverArgs[0], solverArgs[1:]...)
 	stdin, _ := cmd.StdinPipe()
 	stdout, _ := cmd.StdoutPipe()
 	reader := bufio.NewScanner(stdout)
+	writer := bufio.NewWriter(stdin)
 
 	cmd.Start()
 	defer cmd.Wait()
-	cnf.Print(stdin)
+	cnf := sudokusolver.GenerateCNFConstraints(board)
+	cnf.Print(writer)
+	writer.Flush()
 	stdin.Close()
 
 	model := make([]bool, board.LenCells()*board.LenValues())
@@ -134,7 +167,6 @@ func solveWithCustomSolver(board *sudoku.SudokuBoard, cnf *sudokusolver.CNF, sol
 	}
 
 	board.SolveWithModel(model)
-	board.Print()
 }
 
 func explainUnsat(pb *solver.Problem) {

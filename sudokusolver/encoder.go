@@ -5,14 +5,14 @@ import "github.com/rkkautsar/sudoku-solver-2/sudoku"
 func GenerateCNFConstraints(s *sudoku.SudokuBoard) *CNF {
 	cnf := CNF{
 		Board:   s,
-		Clauses: [][]int{},
+		Clauses: make([][]int, 0, s.LenCells()*s.LenValues()*10),
 	}
 
+	cnf.nbVar = s.LenCells() * s.LenValues()
+	cnf.lookupLen = cnf.nbVar
 	cnf.generateLitLookup()
 
-	cnf.nbVar = s.LenCells() * s.LenValues()
-
-	for k := range cnf.LitLookup {
+	for _, k := range cnf.lits {
 		cnf.addClause([]int{k})
 	}
 
@@ -25,10 +25,11 @@ func GenerateCNFConstraints(s *sudoku.SudokuBoard) *CNF {
 }
 
 func (c *CNF) generateLitLookup() {
-	c.LitLookup = make(map[int]bool, len(c.Board.Known)*c.Board.Size*c.Board.Size)
+	c.lits = make([]int, 0, len(c.Board.Known)*c.Board.LenValues()*4)
+	c.litLookup = make([]uint8, c.lookupLen)
 
 	for _, cell := range c.Board.Known {
-		c.LitLookup[c.Board.GetLit(cell.Row, cell.Col, cell.Value)] = true
+		c.addLit(c.Board.GetLit(cell.Row, cell.Col, cell.Value))
 
 		ranges := [][]*sudoku.Cell{
 			c.Board.Row(cell.Row),
@@ -39,7 +40,7 @@ func (c *CNF) generateLitLookup() {
 		// negatives
 		for _, val := range c.Board.Values() {
 			if val != cell.Value {
-				c.LitLookup[-c.Board.GetLit(cell.Row, cell.Col, val)] = true
+				c.addLit(-c.Board.GetLit(cell.Row, cell.Col, val))
 			}
 		}
 
@@ -48,17 +49,17 @@ func (c *CNF) generateLitLookup() {
 				if i.Row == cell.Row && i.Col == cell.Col {
 					continue
 				}
-				c.LitLookup[-c.Board.GetLit(i.Row, i.Col, cell.Value)] = true
+				c.addLit(-c.Board.GetLit(i.Row, i.Col, cell.Value))
 			}
 		}
 	}
 }
 
 func (c *CNF) getCNFCellConstraints(builder CNFBuilder) [][]int {
-	formula := [][]int{}
+	formula := make([][]int, 0, c.Board.LenCells()*c.Board.LenCells()/2)
 
 	for _, cell := range c.Board.Cells() {
-		lits := []int{}
+		lits := make([]int, 0, c.Board.LenValues())
 		for val := 1; val <= c.Board.LenValues(); val++ {
 			lits = append(lits, c.Board.GetLit(cell.Row, cell.Col, val))
 		}
@@ -72,12 +73,11 @@ func (c *CNF) getCNFRangeConstraints(
 	list [][]*sudoku.Cell,
 	builder CNFBuilder,
 ) [][]int {
-	formula := [][]int{}
+	formula := make([][]int, 0, len(list)*len(list)/2)
 	for _, cells := range list {
 		for _, val := range c.Board.Values() {
-			lits := []int{}
+			lits := make([]int, 0, len(list))
 			for _, cell := range cells {
-
 				lits = append(lits, c.Board.GetLit(cell.Row, cell.Col, val))
 			}
 			formula = append(formula, builder(c, lits)...)
