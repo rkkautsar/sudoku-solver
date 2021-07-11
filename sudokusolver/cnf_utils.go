@@ -1,6 +1,6 @@
 package sudokusolver
 
-func cnfAtLeast1(c *CNF, lits []int) [][]int {
+func cnfAtLeast1(c CNFInterface, lits []int) [][]int {
 	for _, lit := range lits {
 		if exists := c.lookup(lit); exists {
 			return [][]int{}
@@ -10,7 +10,7 @@ func cnfAtLeast1(c *CNF, lits []int) [][]int {
 	return [][]int{lits}
 }
 
-func cnfAtMost1(c *CNF, lits []int) [][]int {
+func cnfAtMost1(c CNFInterface, lits []int) [][]int {
 	filteredLits := []int{}
 	for _, lit := range lits {
 		if exists := c.lookup(-lit); !exists {
@@ -23,7 +23,7 @@ func cnfAtMost1(c *CNF, lits []int) [][]int {
 	return cnfAtMost1Bimander(c, filteredLits)
 }
 
-func cnfExactly1(c *CNF, lits []int) [][]int {
+func cnfExactly1(c CNFInterface, lits []int) [][]int {
 	result := make([][]int, 0, 1+len(lits)*len(lits)/2)
 
 	result = append(result, cnfAtLeast1(c, lits)...)
@@ -32,7 +32,7 @@ func cnfExactly1(c *CNF, lits []int) [][]int {
 	return result
 }
 
-func cnfAtMost1Pairwise(c *CNF, lits []int) [][]int {
+func cnfAtMost1Pairwise(c CNFInterface, lits []int) [][]int {
 	result := make([][]int, 0, len(lits)*len(lits)/2)
 	for i := 0; i < len(lits); i++ {
 		for j := i + 1; j < len(lits); j++ {
@@ -45,7 +45,7 @@ func cnfAtMost1Pairwise(c *CNF, lits []int) [][]int {
 
 // Will Klieber and Gihwon Kwon. 2007.
 // Efficient CNF Encoding for Selecting 1 from N Objects.
-func cnfAtMost1Commander(c *CNF, lits []int) [][]int {
+func cnfAtMost1Commander(c CNFInterface, lits []int) [][]int {
 	if len(lits) <= 3 {
 		return cnfAtMost1Pairwise(c, lits)
 	}
@@ -81,7 +81,7 @@ func cnfAtMost1Commander(c *CNF, lits []int) [][]int {
 
 // Nguyen, Van-Hau, and Son T. Mai. 2015.
 // A new method to encode the at-most-one constraint into SAT.
-func cnfAtMost1Bimander(c *CNF, lits []int) [][]int {
+func cnfAtMost1Bimander(c CNFInterface, lits []int) [][]int {
 	factor := 2
 	m := (len(lits) + factor - 1) / factor
 	result := make([][]int, 0, len(lits)*len(lits)/2)
@@ -120,4 +120,18 @@ func getBinLength(m int) int {
 		m <<= 1
 	}
 	return len
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+func makeRange(min, max int) []int {
+	a := make([]int, max-min+1)
+	for i := range a {
+		a[i] = min + i
+	}
+	return a
 }

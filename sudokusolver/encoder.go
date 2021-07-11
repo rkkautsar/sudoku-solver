@@ -4,29 +4,46 @@ import (
 	"github.com/rkkautsar/sudoku-solver/sudoku"
 )
 
-func GenerateCNFConstraints(s *sudoku.SudokuBoard) *CNF {
-	cnf := CNF{
-		Board:   s,
-		Clauses: make([][]int, 0, s.LenCells()*s.LenValues()*10),
+func GenerateCNFConstraints(s *sudoku.SudokuBoard) CNFInterface {
+	var cnf CNFInterface
+
+	shouldUseParallel := s.Size > 4
+
+	if shouldUseParallel {
+		cnf = &CNFParallel{
+			CNF: &CNF{
+				Board:   s,
+				Clauses: make([][]int, 0, s.LenCells()*s.LenValues()*10),
+			},
+		}
+	} else {
+		cnf = &CNF{
+			Board:   s,
+			Clauses: make([][]int, 0, s.LenCells()*s.LenValues()*10),
+		}
 	}
 
-	cnf.nbVar = s.LenCells() * s.LenValues()
-	cnf.lookupLen = cnf.nbVar
+	cnf.setInitialNbVar(s.LenCells() * s.LenValues())
 	cnf.generateLitLookup()
-	cnf.initWorkers()
 
-	for _, k := range cnf.lits {
+	if shouldUseParallel {
+		cnf.(*CNFParallel).initWorkers()
+	}
+
+	for _, k := range cnf.getLits() {
 		cnf.addClause([]int{k})
 	}
 
-	cnf.getCNFCellConstraints(cnfExactly1)
-	cnf.getCNFRangeConstraints(s.Rows(), cnfExactly1)
-	cnf.getCNFRangeConstraints(s.Columns(), cnfExactly1)
-	cnf.getCNFRangeConstraints(s.Blocks(), cnfExactly1)
+	getCNFCellConstraints(cnf, cnfExactly1)
+	getCNFRangeConstraints(cnf, s.Rows(), cnfExactly1)
+	getCNFRangeConstraints(cnf, s.Columns(), cnfExactly1)
+	getCNFRangeConstraints(cnf, s.Blocks(), cnfExactly1)
 
-	cnf.closeAndWait()
+	if shouldUseParallel {
+		cnf.(*CNFParallel).closeAndWait()
+	}
 
-	return &cnf
+	return cnf
 }
 
 func (c *CNF) generateLitLookup() {
@@ -60,25 +77,30 @@ func (c *CNF) generateLitLookup() {
 	}
 }
 
-func (c *CNF) getCNFCellConstraints(builder CNFBuilder) {
-	for _, cell := range c.Board.Cells() {
-		lits := make([]int, 0, c.Board.LenValues())
-		for val := 1; val <= c.Board.LenValues(); val++ {
-			lits = append(lits, c.Board.GetLit(cell.Row, cell.Col, val))
+func (c *CNFParallel) generateLitLookup() {
+	c.CNF.generateLitLookup()
+}
+
+func getCNFCellConstraints(c CNFInterface, builder CNFBuilder) {
+	for _, cell := range c.getBoard().Cells() {
+		lits := make([]int, 0, c.getBoard().LenValues())
+		for val := 1; val <= c.getBoard().LenValues(); val++ {
+			lits = append(lits, c.getBoard().GetLit(cell.Row, cell.Col, val))
 		}
 		c.addFormula(lits, builder)
 	}
 }
 
-func (c *CNF) getCNFRangeConstraints(
+func getCNFRangeConstraints(
+	c CNFInterface,
 	list [][]*sudoku.Cell,
 	builder CNFBuilder,
 ) {
 	for _, cells := range list {
-		for _, val := range c.Board.Values() {
+		for _, val := range c.getBoard().Values() {
 			lits := make([]int, 0, len(list))
 			for _, cell := range cells {
-				lits = append(lits, c.Board.GetLit(cell.Row, cell.Col, val))
+				lits = append(lits, c.getBoard().GetLit(cell.Row, cell.Col, val))
 			}
 			c.addFormula(lits, builder)
 		}

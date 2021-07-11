@@ -1,8 +1,10 @@
 package sudokusolver_test
 
 import (
+	"bufio"
 	"bytes"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -85,7 +87,7 @@ func BenchmarkSolveWithCadicalHard17clue(b *testing.B) {
 	}
 }
 
-func BenchmarkSolveWitCadical25x25(b *testing.B) {
+func BenchmarkSolveWithCadical25x25(b *testing.B) {
 	bytes, _ := ioutil.ReadFile("../data/sudoku-25-1.txt")
 	input := string(bytes)
 	b.ResetTimer()
@@ -94,7 +96,7 @@ func BenchmarkSolveWitCadical25x25(b *testing.B) {
 	}
 }
 
-func BenchmarkSolveWitCadical64x64(b *testing.B) {
+func BenchmarkSolveWithCadical64x64(b *testing.B) {
 	bytes, _ := ioutil.ReadFile("../data/sudoku-64-1.txt")
 	input := string(bytes)
 	b.ResetTimer()
@@ -103,7 +105,7 @@ func BenchmarkSolveWitCadical64x64(b *testing.B) {
 	}
 }
 
-func BenchmarkSolveWitCadical81x81(b *testing.B) {
+func BenchmarkSolveWithCadical81x81(b *testing.B) {
 	bytes, _ := ioutil.ReadFile("../data/sudoku-81-1.txt")
 	input := string(bytes)
 	b.ResetTimer()
@@ -112,12 +114,24 @@ func BenchmarkSolveWitCadical81x81(b *testing.B) {
 	}
 }
 
-func BenchmarkSolveWitCadical144x144(b *testing.B) {
+func BenchmarkSolveWithCadical144x144(b *testing.B) {
 	bytes, _ := ioutil.ReadFile("../data/sudoku-144-1.txt")
 	input := string(bytes)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		customSolveOneLiner(input, "cadical -q")
+	}
+}
+
+func BenchmarkSolveManyWithGophersatHardest110626(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		solveManyWithGophersat("../data/sudoku.many.hardest110626.txt")
+	}
+}
+
+func BenchmarkSolveManyWithGophersat17Clue(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		solveManyWithGophersat("../data/sudoku.many.17clue.txt")
 	}
 }
 
@@ -135,4 +149,13 @@ func customSolveOneLiner(input, solver string) string {
 	var b bytes.Buffer
 	board.PrintOneLine(&b)
 	return strings.TrimSpace(b.String())
+}
+
+func solveManyWithGophersat(inputFile string) {
+	file, _ := os.Open(inputFile)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		input := scanner.Text()
+		gophersatSolveOneLiner(input)
+	}
 }

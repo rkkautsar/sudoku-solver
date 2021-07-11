@@ -15,7 +15,7 @@ import (
 
 func SolveWithGophersat(board *sudoku.SudokuBoard) {
 	cnf := GenerateCNFConstraints(board)
-	pb := solver.ParseSlice(cnf.Clauses)
+	pb := solver.ParseSlice(cnf.getClauses())
 	s := solver.New(pb)
 	status := s.Solve()
 
