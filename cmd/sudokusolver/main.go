@@ -23,7 +23,7 @@ var (
 func init() {
 	flag.BoolVar(&isCNFMode, "cnf", false, "Generate CNF")
 	flag.BoolVar(&isSolveMode, "solve", true, "Solve with SAT solver")
-	flag.BoolVar(&isManyMode, "many", false, "Solve many one-line 9x9 sudoku")
+	flag.BoolVar(&isManyMode, "many", false, "Solve many one-line 9x9 sudoku w/ gophersat")
 	flag.StringVar(&customSolver, "solver", "gophersat", "Solve with specified SAT solver [implies -solve if set]")
 	flag.StringVar(&cpuprofile, "cpuprofile", "", "Write CPU profile to a file")
 	flag.Parse()
@@ -48,7 +48,7 @@ func main() {
 	}
 
 	if isManyMode {
-		solveMany(mode)
+		solveMany()
 	} else {
 		bytes, _ := ioutil.ReadAll(os.Stdin)
 		input := string(bytes)
@@ -76,21 +76,14 @@ func solve(mode, input string) {
 	board.Print()
 }
 
-func solveMany(mode string) {
+// only support gophersat since otherwise it has the overhead of spawning subproc
+func solveMany() {
 	scanner := bufio.NewScanner(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
 	for scanner.Scan() {
 		input := scanner.Text()
 		board := sudoku.NewFromString(input)
-
-		if mode == "solve" {
-			sudokusolver.SolveWithGophersat(&board)
-		}
-
-		if mode == "custom" {
-			sudokusolver.SolveWithCustomSolver(&board, customSolver)
-		}
-
+		sudokusolver.SolveWithGophersat(&board)
 		board.PrintOneLine(writer)
 	}
 	writer.Flush()

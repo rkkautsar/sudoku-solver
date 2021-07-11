@@ -9,17 +9,14 @@ func GenerateCNFConstraints(s *sudoku.SudokuBoard) CNFInterface {
 
 	shouldUseParallel := s.Size > 4
 
+	cnf = &CNF{
+		Board:   s,
+		Clauses: make([][]int, 0, s.LenCells()*s.LenValues()*10),
+	}
+
 	if shouldUseParallel {
 		cnf = &CNFParallel{
-			CNF: &CNF{
-				Board:   s,
-				Clauses: make([][]int, 0, s.LenCells()*s.LenValues()*10),
-			},
-		}
-	} else {
-		cnf = &CNF{
-			Board:   s,
-			Clauses: make([][]int, 0, s.LenCells()*s.LenValues()*10),
+			CNF: cnf.(*CNF),
 		}
 	}
 
