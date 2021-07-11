@@ -15,8 +15,8 @@ import (
 
 	"github.com/crillab/gophersat/explain"
 	"github.com/crillab/gophersat/solver"
-	"github.com/rkkautsar/sudoku-solver-2/sudoku"
-	"github.com/rkkautsar/sudoku-solver-2/sudokusolver"
+	"github.com/rkkautsar/sudoku-solver/sudoku"
+	"github.com/rkkautsar/sudoku-solver/sudokusolver"
 )
 
 var (

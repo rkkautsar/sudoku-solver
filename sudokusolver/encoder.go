@@ -1,7 +1,7 @@
 package sudokusolver
 
 import (
-	"github.com/rkkautsar/sudoku-solver-2/sudoku"
+	"github.com/rkkautsar/sudoku-solver/sudoku"
 )
 
 func GenerateCNFConstraints(s *sudoku.SudokuBoard) *CNF {

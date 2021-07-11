@@ -1,4 +1,4 @@
-module github.com/rkkautsar/sudoku-solver-2
+module github.com/rkkautsar/sudoku-solver
 
 go 1.15
 

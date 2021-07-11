@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/rkkautsar/sudoku-solver-2/sudoku"
+	"github.com/rkkautsar/sudoku-solver/sudoku"
 )
 
 type CNF struct {
