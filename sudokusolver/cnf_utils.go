@@ -61,8 +61,7 @@ func cnfAtMost1Commander(c *CNF, lits []int) [][]int {
 		result = append(result, cnfAtMost1Pairwise(c, groups[i])...)
 	}
 
-	commanders := makeRange(c.nbVar+1, c.nbVar+m)
-	c.nbVar += m
+	commanders := c.requestLiterals(m)
 
 	//  2. If the commander variable of a group is false,
 	// then none of the variables in the group can be true
@@ -94,8 +93,7 @@ func cnfAtMost1Bimander(c *CNF, lits []int) [][]int {
 	}
 
 	binLength := getBinLength(m)
-	auxVars := makeRange(c.nbVar+1, c.nbVar+binLength)
-	c.nbVar += binLength
+	auxVars := c.requestLiterals(binLength)
 
 	for i := 0; i < m; i++ {
 		for _, lit := range groups[i] {

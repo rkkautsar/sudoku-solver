@@ -1,6 +1,8 @@
 package sudokusolver
 
-import "github.com/rkkautsar/sudoku-solver-2/sudoku"
+import (
+	"github.com/rkkautsar/sudoku-solver-2/sudoku"
+)
 
 func GenerateCNFConstraints(s *sudoku.SudokuBoard) *CNF {
 	cnf := CNF{
@@ -11,15 +13,18 @@ func GenerateCNFConstraints(s *sudoku.SudokuBoard) *CNF {
 	cnf.nbVar = s.LenCells() * s.LenValues()
 	cnf.lookupLen = cnf.nbVar
 	cnf.generateLitLookup()
+	cnf.initWorkers()
 
 	for _, k := range cnf.lits {
 		cnf.addClause([]int{k})
 	}
 
-	cnf.addClauses(cnf.getCNFCellConstraints(cnfExactly1))
-	cnf.addClauses(cnf.getCNFRangeConstraints(s.Rows(), cnfExactly1))
-	cnf.addClauses(cnf.getCNFRangeConstraints(s.Columns(), cnfExactly1))
-	cnf.addClauses(cnf.getCNFRangeConstraints(s.Blocks(), cnfExactly1))
+	cnf.getCNFCellConstraints(cnfExactly1)
+	cnf.getCNFRangeConstraints(s.Rows(), cnfExactly1)
+	cnf.getCNFRangeConstraints(s.Columns(), cnfExactly1)
+	cnf.getCNFRangeConstraints(s.Blocks(), cnfExactly1)
+
+	cnf.closeAndWait()
 
 	return &cnf
 }
@@ -55,33 +60,27 @@ func (c *CNF) generateLitLookup() {
 	}
 }
 
-func (c *CNF) getCNFCellConstraints(builder CNFBuilder) [][]int {
-	formula := make([][]int, 0, c.Board.LenCells()*c.Board.LenCells()/2)
-
+func (c *CNF) getCNFCellConstraints(builder CNFBuilder) {
 	for _, cell := range c.Board.Cells() {
 		lits := make([]int, 0, c.Board.LenValues())
 		for val := 1; val <= c.Board.LenValues(); val++ {
 			lits = append(lits, c.Board.GetLit(cell.Row, cell.Col, val))
 		}
-		formula = append(formula, builder(c, lits)...)
+		c.addFormula(lits, builder)
 	}
-
-	return formula
 }
 
 func (c *CNF) getCNFRangeConstraints(
 	list [][]*sudoku.Cell,
 	builder CNFBuilder,
-) [][]int {
-	formula := make([][]int, 0, len(list)*len(list)/2)
+) {
 	for _, cells := range list {
 		for _, val := range c.Board.Values() {
 			lits := make([]int, 0, len(list))
 			for _, cell := range cells {
 				lits = append(lits, c.Board.GetLit(cell.Row, cell.Col, val))
 			}
-			formula = append(formula, builder(c, lits)...)
+			c.addFormula(lits, builder)
 		}
 	}
-	return formula
 }

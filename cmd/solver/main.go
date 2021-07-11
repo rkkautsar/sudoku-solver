@@ -170,6 +170,7 @@ func solveWithCustomSolver(board *sudoku.SudokuBoard, solver string) {
 }
 
 func explainUnsat(pb *solver.Problem) {
+	fmt.Println("UNSAT")
 	cnf := pb.CNF()
 
 	unsatPb, err := explain.ParseCNF(strings.NewReader(cnf))
