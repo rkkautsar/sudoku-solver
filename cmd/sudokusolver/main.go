@@ -39,11 +39,11 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	mode := "cnf"
-	if isSolveMode || !isCNFMode {
-		mode = "solve"
+	mode := "solve"
+	if isCNFMode {
+		mode = "cnf"
 	}
-	if customSolver != "gophersat" {
+	if !isCNFMode && customSolver != "gophersat" {
 		mode = "custom"
 	}
 
