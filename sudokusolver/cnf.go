@@ -11,7 +11,7 @@ type CNFInterface interface {
 	addClause(clause []int)
 	addClauses(clauses [][]int)
 	addFormula(lits []int, builder CNFBuilder)
-	generateLitLookup()
+	initializeLits()
 	lookup(lit int) bool
 	requestLiterals(num int) []int
 	setInitialNbVar(int)
@@ -35,6 +35,7 @@ type CNFBuilder = func(c CNFInterface, lits []int) [][]int
 
 func (c *CNF) addLit(lit int) {
 	c.lits = append(c.lits, lit)
+	c.addClause([]int{lit})
 	if lit < 0 && -lit <= c.lookupLen {
 		c.litLookup[-lit-1] = 2
 	} else if lit > 0 && lit <= c.lookupLen {

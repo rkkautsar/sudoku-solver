@@ -80,12 +80,13 @@ func solve(mode, input string) {
 func solveMany() {
 	scanner := bufio.NewScanner(os.Stdin)
 	writer := bufio.NewWriter(os.Stdout)
-	baseClauses := sudokusolver.GetBase9x9Clauses()
+	base := sudokusolver.GetBase9x9Clauses()
 
 	for scanner.Scan() {
 		input := scanner.Text()
 		board := sudoku.NewFromString(input)
-		sudokusolver.SolveWithGophersatAndBaseClauses(&board, baseClauses)
+		// sudokusolver.SolveWithGophersat(&board)
+		sudokusolver.SolveWithGophersatAndBase(&board, base)
 		board.PrintOneLine(writer)
 	}
 	writer.Flush()

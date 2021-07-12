@@ -7,7 +7,7 @@ import (
 type SudokuBoard struct {
 	Size        int
 	Known       []Cell
-	KnownLookup map[int]int
+	KnownLookup []int
 }
 
 func (s *SudokuBoard) LenValues() int {
@@ -76,8 +76,9 @@ func (s *SudokuBoard) Row(rowIndex int) []*Cell {
 	row := make([]*Cell, 0, s.LenCols())
 	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
-		if val, exist := s.KnownLookup[cell.toInt()]; exist {
-			cell.Value = val
+		idx := cell.Index()
+		if s.KnownLookup != nil && idx < s.LenCells() && s.KnownLookup[idx] != 0 {
+			cell.Value = s.KnownLookup[idx]
 		}
 		row = append(row, cell)
 	}
@@ -136,9 +137,12 @@ func (s *SudokuBoard) GetLit(row int, col int, val int) int {
 }
 
 func (s *SudokuBoard) generateKnownLookup() {
-	s.KnownLookup = make(map[int]int, len(s.Known))
+	s.KnownLookup = make([]int, s.LenCells())
 	for _, cell := range s.Known {
-		s.KnownLookup[cell.withValue(0).toInt()] = cell.Value
+		if cell.Index() >= s.LenCells() {
+			continue
+		}
+		s.KnownLookup[cell.Index()] = cell.Value
 	}
 }
 
@@ -168,13 +172,15 @@ func (cell *Cell) withValue(value int) *Cell {
 	return &Cell{cell.Row, cell.Col, value, cell.size}
 }
 
+func (cell *Cell) Index() int {
+	size2 := cell.size * cell.size
+	return (cell.Row*size2 + cell.Col)
+}
+
 func (cell *Cell) toInt() int {
 	size2 := cell.size * cell.size
 	if cell.Value < 0 {
 		panic("cell value < 0")
-	}
-	if cell.Value == 0 {
-		return -1 * (cell.Row*size2 + cell.Col)
 	}
 	return 1 + cell.Row*(size2*size2) + cell.Col*size2 + (cell.Value - 1)
 }

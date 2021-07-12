@@ -15,11 +15,11 @@ import (
 
 func SolveWithGophersat(board *sudoku.SudokuBoard) {
 	cnf := GenerateCNFConstraints(board)
-	solveCNFwithGophersat(cnf)
+	pb := solver.ParseSlice(cnf.getClauses())
+	solvePbWithGophersat(board, pb)
 }
 
-func solveCNFwithGophersat(cnf CNFInterface) {
-	pb := solver.ParseSlice(cnf.getClauses())
+func solvePbWithGophersat(board *sudoku.SudokuBoard, pb *solver.Problem) {
 	s := solver.New(pb)
 	status := s.Solve()
 
@@ -28,7 +28,7 @@ func solveCNFwithGophersat(cnf CNFInterface) {
 		return
 	}
 
-	cnf.getBoard().SolveWithModel(s.Model())
+	board.SolveWithModel(s.Model())
 }
 
 func SolveWithCustomSolver(board *sudoku.SudokuBoard, solver string) {
@@ -84,13 +84,11 @@ func GetBase9x9Clauses() [][]int {
 	return cnf.getClauses()
 }
 
-func SolveWithGophersatAndBaseClauses(board *sudoku.SudokuBoard, clauses [][]int) {
-	cnf := &CNF{Board: board, Clauses: clauses}
-	cnf.generateLitLookup()
-	for _, lit := range cnf.getLits() {
-		cnf.addClause([]int{lit})
-	}
-	solveCNFwithGophersat(cnf)
+func SolveWithGophersatAndBase(board *sudoku.SudokuBoard, base [][]int) {
+	cnf := &CNF{Board: board, Clauses: base}
+	cnf.initializeLits()
+	pb := solver.ParseSlice(cnf.Clauses)
+	solvePbWithGophersat(board, pb)
 }
 
 func ExplainUnsat(pb *solver.Problem) {

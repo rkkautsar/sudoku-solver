@@ -21,14 +21,10 @@ func GenerateCNFConstraints(s *sudoku.SudokuBoard) CNFInterface {
 	}
 
 	cnf.setInitialNbVar(s.LenCells() * s.LenValues())
-	cnf.generateLitLookup()
+	cnf.initializeLits()
 
 	if shouldUseParallel {
 		cnf.(*CNFParallel).initWorkers()
-	}
-
-	for _, k := range cnf.getLits() {
-		cnf.addClause([]int{k})
 	}
 
 	getCNFCellConstraints(cnf, cnfExactly1)
@@ -43,7 +39,7 @@ func GenerateCNFConstraints(s *sudoku.SudokuBoard) CNFInterface {
 	return cnf
 }
 
-func (c *CNF) generateLitLookup() {
+func (c *CNF) initializeLits() {
 	c.lits = make([]int, 0, len(c.Board.Known)*c.Board.LenValues()*4)
 	c.litLookup = make([]uint8, c.lookupLen)
 
@@ -74,8 +70,8 @@ func (c *CNF) generateLitLookup() {
 	}
 }
 
-func (c *CNFParallel) generateLitLookup() {
-	c.CNF.generateLitLookup()
+func (c *CNFParallel) initializeLits() {
+	c.CNF.initializeLits()
 }
 
 func getCNFCellConstraints(c CNFInterface, builder CNFBuilder) {
