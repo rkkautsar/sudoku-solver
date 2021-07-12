@@ -4,5 +4,8 @@ build: cmd sudoku sudokusolver
 install: build
 	go install ./...
 
+test: sudoku sudokusolver
+	go test -cover ./...
+
 bench: sudokusolver
 	go test -run=XXX -benchmem -bench=. ./sudokusolver
