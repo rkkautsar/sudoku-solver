@@ -19,9 +19,9 @@ Featuring:
 
 ## Benchmarks
 
-About 8.5s to solve the benchmark here: https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
+About 8.5s (0.17ms per puzzle) to solve the benchmark of [49k 17-clue 9x9 sudoku](data/sudoku.many.17clue.txt) from here: https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
 
-Fastest on this benchmark is [tdoku](https://www.github.com/t-dillon/tdoku) which took 0.2s to complete :rocket:. Other SAT-based solver with minisat took 11.7s but done in different machine, so seems we have similar performance. (TODO: can do better if we can reuse gophersat solver isntead)
+Fastest on this benchmark is [tdoku](https://www.github.com/t-dillon/tdoku) which took 0.2s to complete :rocket:. Other SAT-based solver with minisat took 11.7s but done in different machine, so seems we have similar performance. (TODO: can do better if we can reuse gophersat solver instead)
 
 Other benchmarks on MacBook Pro (15-inch, 2019):
 
@@ -82,7 +82,7 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 
 Inspiration, code snippets, etc.
 
-- [gophersat](https://github.com/crillab/gophersat)
+- [Gophersat](https://github.com/crillab/gophersat)
 - Kwon, Gihwon, and Himanshu Jain. "Optimized CNF encoding for sudoku puzzles." Proc. 13th International Conference on Logic for Programming Artificial Intelligence and Reasoning (LPAR2006). 2006. ([PDF](http://www.cs.cmu.edu/~hjain/papers/sudoku-as-SAT.pdf))
 - Klieber, Will, and Gihwon Kwon. "Efficient CNF encoding for selecting 1 from n objects." Proc. International Workshop on Constraints in Formal Verification. 2007. ([PDF](https://www.cs.cmu.edu/~wklieber/papers/2007_efficient-cnf-encoding-for-selecting-1.pdf))
 - Nguyen, Van-Hau, and Son T. Mai. "A new method to encode the at-most-one constraint into SAT." Proceedings of the Sixth International Symposium on Information and Communication Technology. 2015. ([PDF](https://www.researchgate.net/profile/Van-Hau-Nguyen/publication/301455290_A_New_Method_to_Encode_the_At-Most-One_Constraint_into_SAT/links/5d2bfbaba6fdcc2462e0e269/A-New-Method-to-Encode-the-At-Most-One-Constraint-into-SAT.pdf))

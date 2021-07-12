@@ -85,7 +85,7 @@ func GetBase9x9Clauses() [][]int {
 }
 
 func SolveWithGophersatAndBaseClauses(board *sudoku.SudokuBoard, clauses [][]int) {
-	cnf := &CNF{Board: board}
+	cnf := &CNF{Board: board, Clauses: clauses}
 	cnf.generateLitLookup()
 	for _, lit := range cnf.getLits() {
 		cnf.addClause([]int{lit})

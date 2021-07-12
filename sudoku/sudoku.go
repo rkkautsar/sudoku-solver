@@ -63,7 +63,7 @@ func (s *SudokuBoard) Blocks() [][]*Cell {
 }
 
 func (s *SudokuBoard) Cells() []*Cell {
-	cells := []*Cell{}
+	cells := make([]*Cell, 0, s.LenCells())
 	for _, row := range s.Rows() {
 		for _, cell := range row {
 			cells = append(cells, cell)
