@@ -20,7 +20,8 @@ Featuring:
 ## Benchmarks
 
 About 8.5s to solve the benchmark here: https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
-Fastest on this is [tdoku](https://www.github.com/t-dillon/tdoku) which took 0.2s to complete. Other SAT-based solver with minisat took 11.7s but done in different machine, so seems we have similar performance.
+
+Fastest on this benchmark is [tdoku](https://www.github.com/t-dillon/tdoku) which took 0.2s to complete :rocket:. Other SAT-based solver with minisat took 11.7s but done in different machine, so seems we have similar performance. (TODO: can do better if we can reuse gophersat solver isntead)
 
 Other benchmarks on MacBook Pro (15-inch, 2019):
 
