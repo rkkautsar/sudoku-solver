@@ -1,14 +1,13 @@
 package sudoku
 
 import (
-	"fmt"
 	"math"
 )
 
 type SudokuBoard struct {
 	Size        int
 	Known       []Cell
-	KnownLookup map[string]int
+	KnownLookup map[int]int
 }
 
 func (s *SudokuBoard) LenValues() int {
@@ -77,7 +76,7 @@ func (s *SudokuBoard) Row(rowIndex int) []*Cell {
 	row := make([]*Cell, 0, s.LenCols())
 	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
-		if val, exist := s.KnownLookup[fmt.Sprint(rowIndex, colIndex)]; exist {
+		if val, exist := s.KnownLookup[cell.toInt()]; exist {
 			cell.Value = val
 		}
 		row = append(row, cell)
@@ -137,9 +136,9 @@ func (s *SudokuBoard) GetLit(row int, col int, val int) int {
 }
 
 func (s *SudokuBoard) generateKnownLookup() {
-	s.KnownLookup = make(map[string]int, len(s.Known))
+	s.KnownLookup = make(map[int]int, len(s.Known))
 	for _, cell := range s.Known {
-		s.KnownLookup[fmt.Sprint(cell.Row, cell.Col)] = cell.Value
+		s.KnownLookup[cell.withValue(0).toInt()] = cell.Value
 	}
 }
 
@@ -171,8 +170,11 @@ func (cell *Cell) withValue(value int) *Cell {
 
 func (cell *Cell) toInt() int {
 	size2 := cell.size * cell.size
-	if cell.Value <= 0 {
-		panic("cell value <= 0")
+	if cell.Value < 0 {
+		panic("cell value < 0")
+	}
+	if cell.Value == 0 {
+		return -1 * (cell.Row*size2 + cell.Col)
 	}
 	return 1 + cell.Row*(size2*size2) + cell.Col*size2 + (cell.Value - 1)
 }

@@ -154,8 +154,12 @@ func customSolveOneLiner(input, solver string) string {
 func solveManyWithGophersat(inputFile string) {
 	file, _ := os.Open(inputFile)
 	scanner := bufio.NewScanner(file)
+	baseClauses := sudokusolver.GetBase9x9Clauses()
 	for scanner.Scan() {
 		input := scanner.Text()
-		gophersatSolveOneLiner(input)
+		board := sudoku.NewFromString(input)
+		sudokusolver.SolveWithGophersatAndBaseClauses(&board, baseClauses)
+		var b bytes.Buffer
+		board.PrintOneLine(&b)
 	}
 }
