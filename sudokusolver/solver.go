@@ -3,6 +3,7 @@ package sudokusolver
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
 	"sort"
 	"strconv"
@@ -78,19 +79,6 @@ func SolveWithCustomSolver(board *sudoku.SudokuBoard, solver string) {
 	board.SolveWithModel(model)
 }
 
-func GetBase9x9Clauses() [][]int {
-	board := sudoku.SudokuBoard{Size: 3, Known: []sudoku.Cell{}}
-	cnf := GenerateCNFConstraints(&board)
-	return cnf.getClauses()
-}
-
-func SolveWithGophersatAndBase(board *sudoku.SudokuBoard, base [][]int) {
-	cnf := &CNF{Board: board, Clauses: base}
-	cnf.initializeLits()
-	pb := solver.ParseSlice(cnf.Clauses)
-	solvePbWithGophersat(board, pb)
-}
-
 func ExplainUnsat(pb *solver.Problem) {
 	fmt.Println("UNSAT")
 	cnf := pb.CNF()
@@ -110,4 +98,32 @@ func ExplainUnsat(pb *solver.Problem) {
 	sort.Sort(sort.StringSlice(lines[1:]))
 	musCnf = strings.Join(lines, "\n")
 	fmt.Println(musCnf)
+}
+
+// only support gophersat since otherwise it has the overhead of spawning subproc
+func SolveMany() {
+	scanner := bufio.NewScanner(os.Stdin)
+	writer := bufio.NewWriter(os.Stdout)
+	base := GetBase9x9Clauses()
+
+	for scanner.Scan() {
+		input := scanner.Text()
+		board := sudoku.NewFromString(input)
+		SolveWithGophersatAndBase(&board, base)
+		board.PrintOneLine(writer)
+	}
+	writer.Flush()
+}
+
+func GetBase9x9Clauses() [][]int {
+	board := sudoku.SudokuBoard{Size: 3, Known: []*sudoku.Cell{}}
+	cnf := GenerateCNFConstraints(&board)
+	return cnf.getClauses()
+}
+
+func SolveWithGophersatAndBase(board *sudoku.SudokuBoard, base [][]int) {
+	cnf := &CNF{Board: board, Clauses: base}
+	cnf.initializeLits()
+	pb := solver.ParseSlice(cnf.Clauses)
+	solvePbWithGophersat(board, pb)
 }

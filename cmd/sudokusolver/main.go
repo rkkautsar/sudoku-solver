@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -48,7 +47,7 @@ func main() {
 	}
 
 	if isManyMode {
-		solveMany()
+		sudokusolver.SolveMany()
 	} else {
 		bytes, _ := ioutil.ReadAll(os.Stdin)
 		input := string(bytes)
@@ -74,20 +73,4 @@ func solve(mode, input string) {
 	}
 
 	board.Print()
-}
-
-// only support gophersat since otherwise it has the overhead of spawning subproc
-func solveMany() {
-	scanner := bufio.NewScanner(os.Stdin)
-	writer := bufio.NewWriter(os.Stdout)
-	base := sudokusolver.GetBase9x9Clauses()
-
-	for scanner.Scan() {
-		input := scanner.Text()
-		board := sudoku.NewFromString(input)
-		// sudokusolver.SolveWithGophersat(&board)
-		sudokusolver.SolveWithGophersatAndBase(&board, base)
-		board.PrintOneLine(writer)
-	}
-	writer.Flush()
 }

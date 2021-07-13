@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var SPACE_REGEX = regexp.MustCompile(`  +`)
+
 /*
 Parse newline and space separated sudoku problem
 0 0 3 ...
@@ -18,8 +20,7 @@ Parse newline and space separated sudoku problem
 */
 func NewFromString(input string) SudokuBoard {
 	input = strings.Trim(input, " \n\t")
-	space := regexp.MustCompile(`  +`)
-	input = space.ReplaceAllString(input, " ")
+	input = SPACE_REGEX.ReplaceAllString(input, " ")
 
 	// standard 9x9 single row
 	if strings.Index(input, "\n") == -1 {
@@ -49,11 +50,12 @@ func NewFromString(input string) SudokuBoard {
 func NewFromSingleRowString(input string) SudokuBoard {
 	size2 := 9
 	size := 3
-	known := []Cell{}
+	// at least 17 clue needed
+	known := make([]*Cell, 0, 17)
 
 	for i, c := range input {
 		if c != '0' && c != '.' {
-			known = append(known, Cell{
+			known = append(known, &Cell{
 				Row:   i / size2,
 				Col:   i % size2,
 				Value: int(c - '0'),
@@ -74,7 +76,7 @@ func NewFromArray(cells [][]int) SudokuBoard {
 	size2 := len(cells)
 	size := getSize(size2)
 
-	known := []Cell{}
+	known := make([]*Cell, 17)
 
 	for r, row := range cells {
 		for c, val := range row {
@@ -82,7 +84,7 @@ func NewFromArray(cells [][]int) SudokuBoard {
 				continue
 			}
 
-			known = append(known, Cell{
+			known = append(known, &Cell{
 				Row:   r,
 				Col:   c,
 				Value: val,

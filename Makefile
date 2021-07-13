@@ -9,3 +9,6 @@ test: sudoku sudokusolver
 
 bench: sudokusolver
 	go test -run=XXX -benchmem -bench=. ./sudokusolver
+
+profile_many: build
+	./bin/sudokusolver -many -cpuprofile=cpu.prof

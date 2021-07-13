@@ -6,7 +6,7 @@ import (
 
 type SudokuBoard struct {
 	Size        int
-	Known       []Cell
+	Known       []*Cell
 	KnownLookup []int
 }
 
@@ -31,9 +31,9 @@ func (s *SudokuBoard) LenBlocks() int {
 }
 
 func (s *SudokuBoard) Values() []int {
-	values := []int{}
+	values := make([]int, s.LenValues())
 	for i := 1; i <= s.LenValues(); i++ {
-		values = append(values, i)
+		values[i-1] = i
 	}
 	return values
 }
@@ -63,33 +63,33 @@ func (s *SudokuBoard) Blocks() [][]*Cell {
 }
 
 func (s *SudokuBoard) Cells() []*Cell {
-	cells := make([]*Cell, 0, s.LenCells())
+	cells := make([]*Cell, s.LenCells())
 	for _, row := range s.Rows() {
 		for _, cell := range row {
-			cells = append(cells, cell)
+			cells[cell.Index()] = cell
 		}
 	}
 	return cells
 }
 
 func (s *SudokuBoard) Row(rowIndex int) []*Cell {
-	row := make([]*Cell, 0, s.LenCols())
+	row := make([]*Cell, s.LenCols())
 	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
 		idx := cell.Index()
 		if s.KnownLookup != nil && idx < s.LenCells() && s.KnownLookup[idx] != 0 {
 			cell.Value = s.KnownLookup[idx]
 		}
-		row = append(row, cell)
+		row[colIndex] = cell
 	}
 	return row
 }
 
 func (s *SudokuBoard) Column(colIndex int) []*Cell {
-	col := make([]*Cell, 0, s.LenRows())
+	col := make([]*Cell, s.LenRows())
 	for rowIndex := 0; rowIndex < s.LenRows(); rowIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
-		col = append(col, cell)
+		col[rowIndex] = cell
 	}
 	return col
 }
@@ -102,12 +102,14 @@ func (s *SudokuBoard) Column(colIndex int) []*Cell {
 func (s *SudokuBoard) Block(blkIndex int) []*Cell {
 	rowStart := (blkIndex / s.Size) * s.Size
 	colStart := (blkIndex % s.Size) * s.Size
-	block := make([]*Cell, 0, s.LenValues())
+	block := make([]*Cell, s.LenValues())
 
+	idx := 0
 	for rowIndex := rowStart; rowIndex < rowStart+s.Size; rowIndex++ {
 		for colIndex := colStart; colIndex < colStart+s.Size; colIndex++ {
 			cell := s.NewCell(rowIndex, colIndex)
-			block = append(block, cell)
+			block[idx] = cell
+			idx++
 		}
 	}
 	return block
@@ -147,15 +149,14 @@ func (s *SudokuBoard) generateKnownLookup() {
 }
 
 func (s *SudokuBoard) SolveWithModel(model []bool) {
-	s.Known = []Cell{}
+	s.Known = make([]*Cell, len(model))
 
 	for idx, val := range model {
 		if !val {
 			continue
 		}
 
-		cell := s.NewCellFromLit(idx + 1)
-		s.Known = append(s.Known, *cell)
+		s.Known[idx] = s.NewCellFromLit(idx + 1)
 	}
 
 	s.generateKnownLookup()
@@ -166,10 +167,6 @@ type Cell struct {
 	Col   int // 0-based
 	Value int
 	size  int
-}
-
-func (cell *Cell) withValue(value int) *Cell {
-	return &Cell{cell.Row, cell.Col, value, cell.size}
 }
 
 func (cell *Cell) Index() int {
