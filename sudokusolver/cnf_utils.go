@@ -24,12 +24,7 @@ func cnfAtMost1(c CNFInterface, lits []int) [][]int {
 }
 
 func cnfExactly1(c CNFInterface, lits []int) [][]int {
-	result := make([][]int, 0, 1+len(lits)*len(lits)/2)
-
-	result = append(result, cnfAtLeast1(c, lits)...)
-	result = append(result, cnfAtMost1(c, lits)...)
-
-	return result
+	return append(cnfAtMost1(c, lits), cnfAtLeast1(c, lits)...)
 }
 
 func cnfAtMost1Pairwise(c CNFInterface, lits []int) [][]int {
@@ -128,6 +123,7 @@ func min(a, b int) int {
 	}
 	return b
 }
+
 func makeRange(min, max int) []int {
 	a := make([]int, max-min+1)
 	for i := range a {

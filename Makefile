@@ -10,5 +10,8 @@ test: sudoku sudokusolver
 bench: sudokusolver
 	go test -run=XXX -benchmem -bench=. ./sudokusolver
 
-profile_many: build
-	./bin/sudokusolver -many -cpuprofile=cpu.prof -memprofile=mem.prof
+benchprofile:
+	go test -run=XXX -benchmem -bench=. -cpuprofile=cpu.prof -memprofile=mem.prof ./sudokusolver
+
+profile: build
+	./bin/sudokusolver -cpuprofile=cpu.prof -memprofile=mem.prof ${ARGS}
