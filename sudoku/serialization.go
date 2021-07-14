@@ -76,7 +76,7 @@ func NewFromArray(cells [][]int) SudokuBoard {
 	size2 := len(cells)
 	size := getSize(size2)
 
-	known := make([]*Cell, 17)
+	known := make([]*Cell, 0, 17)
 
 	for r, row := range cells {
 		for c, val := range row {
@@ -99,21 +99,21 @@ func NewFromArray(cells [][]int) SudokuBoard {
 		Size:  size,
 	}
 
-	board.generateKnownLookup()
-
 	return board
 }
 
-func (s *SudokuBoard) Print() {
+func (s *SudokuBoard) Print(w io.Writer) {
 	charLen := int(math.Floor(math.Log10(float64(s.LenCells()))))
 	formatter := fmt.Sprintf("%%%dd", charLen)
 
 	for _, row := range s.Rows() {
-		formatted := make([]string, s.LenCols())
 		for i, cell := range row {
-			formatted[i] = fmt.Sprintf(formatter, cell.Value)
+			if i != 0 {
+				fmt.Fprint(w, " ")
+			}
+			fmt.Fprintf(w, formatter, cell.Value)
 		}
-		fmt.Println(strings.Join(formatted, " "))
+		fmt.Fprintln(w)
 	}
 }
 

@@ -149,14 +149,14 @@ func (s *SudokuBoard) generateKnownLookup() {
 }
 
 func (s *SudokuBoard) SolveWithModel(model []bool) {
-	s.Known = make([]*Cell, len(model))
+	s.Known = make([]*Cell, 0, s.LenCells())
 
-	for idx, val := range model {
+	for lit, val := range model {
 		if !val {
 			continue
 		}
 
-		s.Known[idx] = s.NewCellFromLit(idx + 1)
+		s.Known = append(s.Known, s.NewCellFromLit(lit+1))
 	}
 
 	s.generateKnownLookup()

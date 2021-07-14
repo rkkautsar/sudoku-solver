@@ -16,6 +16,8 @@ type CNFParallel struct {
 	workChan    chan WorkRequest
 	clauseChan  chan [][]int
 	literalChan chan NewLiteralRequest
+	doneChan    chan bool
+	workerCount int
 }
 
 func (c *CNFParallel) lookup(lit int) bool {
@@ -64,14 +66,14 @@ func (c *CNFParallel) initWorkers() {
 	c.workChan = make(chan WorkRequest)
 	c.clauseChan = make(chan [][]int)
 	c.literalChan = make(chan NewLiteralRequest)
-	go clauseManager(c)
-	go newLiteralManager(c)
+	c.doneChan = make(chan bool)
+	go manager(c)
 
-	workerCount := runtime.NumCPU() - 2
-	if workerCount <= 0 {
-		workerCount = 1
+	c.workerCount = runtime.NumCPU() - 2
+	if c.workerCount <= 0 {
+		c.workerCount = 1
 	}
-	for i := 0; i < workerCount; i++ {
+	for i := 0; i < c.workerCount; i++ {
 		go worker(c)
 	}
 }
@@ -104,23 +106,23 @@ func worker(cnf *CNFParallel) {
 		formula := instruction.builder(cnf, instruction.lits)
 		cnf.clauseChan <- formula
 	}
+	cnf.doneChan <- true
 	cnf.workerWg.Done()
 }
 
-func clauseManager(cnf *CNFParallel) {
+func manager(cnf *CNFParallel) {
 	cnf.managerWg.Add(1)
-	for clauses := range cnf.clauseChan {
-		cnf.Clauses = append(cnf.Clauses, clauses...)
-	}
-	cnf.managerWg.Done()
-}
-
-func newLiteralManager(cnf *CNFParallel) {
-	cnf.managerWg.Add(1)
-	for request := range cnf.literalChan {
-		lits := makeRange(cnf.nbVar+1, cnf.nbVar+request.num)
-		cnf.nbVar += request.num
-		request.resp <- lits
+	for n := cnf.workerCount; n > 0; {
+		select {
+		case clauses := <-cnf.clauseChan:
+			cnf.Clauses = append(cnf.Clauses, clauses...)
+		case request := <-cnf.literalChan:
+			lits := makeRange(cnf.nbVar+1, cnf.nbVar+request.num)
+			cnf.nbVar += request.num
+			request.resp <- lits
+		case <-cnf.doneChan:
+			n--
+		}
 	}
 	cnf.managerWg.Done()
 }

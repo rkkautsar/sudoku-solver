@@ -19,7 +19,7 @@ Featuring:
 
 ## Benchmarks
 
-About 70s (1.4ms per puzzle) to solve the benchmark of [49k 17-clue 9x9 sudoku](data/sudoku.many.17clue.txt) from here: https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
+About 68s (1.4ms per puzzle) to solve the benchmark of [49k 17-clue 9x9 sudoku](data/sudoku.many.17clue.txt) from here: https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
 
 Fastest on this benchmark is [tdoku](https://www.github.com/t-dillon/tdoku) which took 0.2s to complete :rocket:. Other SAT-based solver with minisat took 11.7s but done in different machine. We should be able to achieve the same number (or even faster?) if we can reuse the SAT solver instead (AFAIK currently gophersat doesn't support that).
 
@@ -31,23 +31,23 @@ go test -run=XXX -benchmem -bench=. ./sudokusolver
 goos: darwin
 goarch: amd64
 pkg: github.com/rkkautsar/sudoku-solver/sudokusolver
-BenchmarkSolveWithGophersatAiEscargot-12           	     427	   2671008 ns/op	 1517566 B/op	   13972 allocs/op
-BenchmarkSolveWithGophersatHard9x9-12              	     416	   2831866 ns/op	 1606058 B/op	   14949 allocs/op
-BenchmarkSolveWithGophersat17clue9x9-12            	     798	   1542301 ns/op	 1510787 B/op	   15388 allocs/op
-BenchmarkSolveWithGophersat25x25-12                	      13	 198769497 ns/op	81853725 B/op	  171645 allocs/op
-BenchmarkSolveWithGophersat64x64-12                	       1	1945220966 ns/op	1432926776 B/op	 1800925 allocs/op
-BenchmarkSolveWithGophersat81x81-12                	       1	11398970081 ns/op	4513232568 B/op	 3411549 allocs/op
-BenchmarkSolveWithCadicalAiEscargot-12             	     109	  11186665 ns/op	  889477 B/op	   13093 allocs/op
-BenchmarkSolveWithCadicalHard9x9-12                	      88	  12784883 ns/op	  913035 B/op	   13684 allocs/op
-BenchmarkSolveWithCadicalHard17clue-12             	     122	  10207471 ns/op	  957309 B/op	   14713 allocs/op
-BenchmarkSolveWithCadical25x25-12                  	       9	 134338770 ns/op	30209425 B/op	  203807 allocs/op
-BenchmarkSolveWithCadical64x64-12                  	       1	1362732578 ns/op	1079056248 B/op	 2759366 allocs/op
-BenchmarkSolveWithCadical81x81-12                  	       1	2338041475 ns/op	2432113984 B/op	 5418335 allocs/op
-BenchmarkSolveWithCadical144x144-12                	       1	19602138983 ns/op	22571851160 B/op	28943003 allocs/op
-BenchmarkSolveManyWithGophersatHardest110626-12    	       2	 579917183 ns/op	385855932 B/op	 5132818 allocs/op
-BenchmarkSolveManyWithGophersat17Clue-12           	       1	69941989808 ns/op	50119247888 B/op	652776439 allocs/op
+BenchmarkSolveWithGophersatAiEscargot-12           	     440	   2619218 ns/op	 1492665 B/op	   13764 allocs/op
+BenchmarkSolveWithGophersatHard9x9-12              	     445	   2664543 ns/op	 1581811 B/op	   14747 allocs/op
+BenchmarkSolveWithGophersat17clue9x9-12            	     800	   1497033 ns/op	 1486668 B/op	   15200 allocs/op
+BenchmarkSolveWithGophersat25x25-12                	      13	 214647199 ns/op	89722513 B/op	  171241 allocs/op
+BenchmarkSolveWithGophersat64x64-12                	       1	1461878184 ns/op	1406503392 B/op	 1786650 allocs/op
+BenchmarkSolveWithGophersat81x81-12                	       1	11567383716 ns/op	4623310624 B/op	 3386890 allocs/op
+BenchmarkSolveWithCadicalAiEscargot-12             	      86	  11679865 ns/op	  868394 B/op	   12884 allocs/op
+BenchmarkSolveWithCadicalHard9x9-12                	      85	  13694774 ns/op	  893992 B/op	   13482 allocs/op
+BenchmarkSolveWithCadicalHard17clue-12             	     110	  10720756 ns/op	  939978 B/op	   14526 allocs/op
+BenchmarkSolveWithCadical25x25-12                  	       8	 142845386 ns/op	30053894 B/op	  202405 allocs/op
+BenchmarkSolveWithCadical64x64-12                  	       1	1102019556 ns/op	1076979416 B/op	 2745999 allocs/op
+BenchmarkSolveWithCadical81x81-12                  	       1	2413306978 ns/op	2425167816 B/op	 5392853 allocs/op
+BenchmarkSolveWithCadical144x144-12                	       1	17188514020 ns/op	22526224632 B/op	28845185 allocs/op
+BenchmarkSolveManyWithGophersatHardest110626-12    	       2	 554761716 ns/op	379259636 B/op	 5097771 allocs/op
+BenchmarkSolveManyWithGophersat17Clue-12           	       1	68379438066 ns/op	49290168648 B/op	648892469 allocs/op
 PASS
-ok  	github.com/rkkautsar/sudoku-solver/sudokusolver	122.987s
+ok  	github.com/rkkautsar/sudoku-solver/sudokusolver	118.915s
 ```
 
 ## Getting Started
