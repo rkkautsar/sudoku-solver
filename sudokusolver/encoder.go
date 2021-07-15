@@ -23,14 +23,16 @@ func GenerateCNFConstraints(s *sudoku.SudokuBoard) CNFInterface {
 	cnf.setInitialNbVar(s.LenCells() * s.LenValues())
 	cnf.initializeLits()
 
+	// var b bytes.Buffer
+	// cnf.Print(&b)
+	// log.Println(b.String())
+
 	if shouldUseParallel {
 		cnf.(*CNFParallel).initWorkers()
 	}
 
-	getCNFCellConstraints(cnf, cnfExactly1)
-	getCNFRangeConstraints(cnf, s.Rows(), cnfExactly1)
-	getCNFRangeConstraints(cnf, s.Columns(), cnfExactly1)
-	getCNFRangeConstraints(cnf, s.Blocks(), cnfExactly1)
+	buildCNFCellConstraints(cnf, cnfExactly1)
+	buildCNFRangeConstraints(cnf, cnfExactly1)
 
 	if shouldUseParallel {
 		cnf.(*CNFParallel).closeAndWait()
@@ -40,31 +42,34 @@ func GenerateCNFConstraints(s *sudoku.SudokuBoard) CNFInterface {
 }
 
 func (c *CNF) initializeLits() {
-	c.lits = make([]int, 0, len(c.Board.Known)*c.Board.LenValues()*4)
+	c.lits = make([]int, 0, c.Board.LenCells()*c.Board.LenValues())
 	c.litLookup = make([]uint8, c.lookupLen)
 
 	for _, cell := range c.Board.Known {
-		c.addLit(c.Board.GetLit(cell.Row, cell.Col, cell.Value))
+		row, col, value, size := cell.Row, cell.Col, cell.Value, c.Board.Size
 
-		ranges := [][]*sudoku.Cell{
-			c.Board.Row(cell.Row),
-			c.Board.Column(cell.Col),
-			c.Board.Block(cell.BlockIndex()),
-		}
+		lit := c.Board.GetLit(row, col, value)
+		c.addLit(lit)
+
+		blkIndex := cell.BlockIndex()
+		blkRowStart := (blkIndex / size) * size
+		blkColStart := (blkIndex % size) * size
 
 		// negatives
-		for _, val := range c.Board.Values() {
-			if val != cell.Value {
-				c.addLit(-c.Board.GetLit(cell.Row, cell.Col, val))
+		for i := 0; i < size*size; i++ {
+			if i+1 != value {
+				c.addLit(-c.Board.GetLit(row, col, i+1))
 			}
-		}
-
-		for _, r := range ranges {
-			for _, i := range r {
-				if i.Row == cell.Row && i.Col == cell.Col {
-					continue
-				}
-				c.addLit(-c.Board.GetLit(i.Row, i.Col, cell.Value))
+			if i != row {
+				c.addLit(-c.Board.GetLit(i, col, value))
+			}
+			if i != col {
+				c.addLit(-c.Board.GetLit(row, i, value))
+			}
+			blkRow := blkRowStart + i/size
+			blkCol := blkColStart + i%size
+			if blkRow != row && blkCol != col {
+				c.addLit(-c.Board.GetLit(blkRow, blkCol, value))
 			}
 		}
 	}
@@ -74,7 +79,7 @@ func (c *CNFParallel) initializeLits() {
 	c.CNF.initializeLits()
 }
 
-func getCNFCellConstraints(c CNFInterface, builder CNFBuilder) {
+func buildCNFCellConstraints(c CNFInterface, builder CNFBuilder) {
 	for _, cell := range c.getBoard().Cells() {
 		lits := make([]int, 0, c.getBoard().LenValues())
 		for val := 1; val <= c.getBoard().LenValues(); val++ {
@@ -84,18 +89,38 @@ func getCNFCellConstraints(c CNFInterface, builder CNFBuilder) {
 	}
 }
 
-func getCNFRangeConstraints(
+func buildCNFRangeConstraints(
 	c CNFInterface,
-	list [][]*sudoku.Cell,
 	builder CNFBuilder,
 ) {
-	for _, cells := range list {
-		for _, val := range c.getBoard().Values() {
-			lits := make([]int, 0, len(list))
-			for _, cell := range cells {
-				lits = append(lits, c.getBoard().GetLit(cell.Row, cell.Col, val))
+	size := c.getBoard().Size
+	size2 := size * size
+
+	for val := 1; val <= size2; val++ {
+		for i := 0; i < size2; i++ {
+
+			blkRowStart := (i / size) * size
+			blkColStart := (i % size) * size
+
+			rowLits := make([]int, size2)
+			colLits := make([]int, size2)
+			blkLits := make([]int, size2)
+			for j := 0; j < size2; j++ {
+				// row
+				rowLits[j] = c.getBoard().GetLit(i, j, val)
+
+				// col
+				colLits[j] = c.getBoard().GetLit(j, i, val)
+
+				// block
+				blkRow := blkRowStart + j/size
+				blkCol := blkColStart + j%size
+				blkLits[j] = c.getBoard().GetLit(blkRow, blkCol, val)
 			}
-			c.addFormula(lits, builder)
+
+			c.addFormula(blkLits, builder)
+			c.addFormula(rowLits, builder)
+			c.addFormula(colLits, builder)
 		}
 	}
 }

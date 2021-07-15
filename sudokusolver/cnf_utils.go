@@ -11,14 +11,35 @@ func cnfAtLeast1(c CNFInterface, lits []int) [][]int {
 }
 
 func cnfAtMost1(c CNFInterface, lits []int) [][]int {
-	filteredLits := []int{}
+	return _cnfAtMost1(c, lits, false)
+}
+
+func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
+	filteredLits := make([]int, 0, len(lits))
+	satisfyingLit := 0
 	for _, lit := range lits {
-		if exists := c.lookup(-lit); !exists {
+
+		if !c.lookup(-lit) {
 			filteredLits = append(filteredLits, lit)
+		} else if c.lookup(lit) {
+			satisfyingLit = lit
 		}
 	}
 
-	// return cnfAtMost1Pairwise(c, filteredLits)
+	if satisfyingLit != 0 {
+		for _, lit := range lits {
+			if satisfyingLit == lit || c.lookup(-lit) {
+				continue
+			}
+			c.addLit(-lit)
+		}
+		return [][]int{}
+	}
+
+	if pairwise {
+		return cnfAtMost1Pairwise(c, filteredLits)
+	}
+
 	// return cnfAtMost1Commander(c, filteredLits)
 	return cnfAtMost1Bimander(c, filteredLits)
 }
@@ -28,11 +49,12 @@ func cnfExactly1(c CNFInterface, lits []int) [][]int {
 }
 
 func cnfAtMost1Pairwise(c CNFInterface, lits []int) [][]int {
-	result := make([][]int, 0, len(lits)*len(lits)/2)
-	for i := 0; i < len(lits); i++ {
-		for j := i + 1; j < len(lits); j++ {
+	n := len(lits)
+	result := make([][]int, 0, n*n/2)
+	for i := 0; i < n; i++ {
+		for j := i + 1; j < n; j++ {
 			// each pair can't be true at the same time
-			result = append(result, cnfAtLeast1(c, []int{-lits[i], -lits[j]})...)
+			result = append(result, []int{-lits[i], -lits[j]})
 		}
 	}
 	return result
@@ -42,18 +64,18 @@ func cnfAtMost1Pairwise(c CNFInterface, lits []int) [][]int {
 // Efficient CNF Encoding for Selecting 1 from N Objects.
 func cnfAtMost1Commander(c CNFInterface, lits []int) [][]int {
 	if len(lits) <= 3 {
-		return cnfAtMost1Pairwise(c, lits)
+		return _cnfAtMost1(c, lits, true)
 	}
 
 	factor := 3
 	m := (len(lits) + factor - 1) / factor
-	result := make([][]int, 0, len(lits)*len(lits)/2)
+	result := make([][]int, 0, len(lits)*m)
 
 	groups := make([][]int, m)
 	for i := 0; i < m; i++ {
 		groups[i] = lits[factor*i : min(factor*(i+1), len(lits))]
 		// 1. At most one variable in a group can be true
-		result = append(result, cnfAtMost1Pairwise(c, groups[i])...)
+		result = append(result, _cnfAtMost1(c, groups[i], true)...)
 	}
 
 	commanders := c.requestLiterals(m)
@@ -78,27 +100,28 @@ func cnfAtMost1Commander(c CNFInterface, lits []int) [][]int {
 // A new method to encode the at-most-one constraint into SAT.
 func cnfAtMost1Bimander(c CNFInterface, lits []int) [][]int {
 	factor := 2
-	m := (len(lits) + factor - 1) / factor
-	result := make([][]int, 0, len(lits)*len(lits)/2)
+	n := len(lits)
+	m := (n + factor - 1) / factor
+	binLength := getBinLength(m)
+	result := make([][]int, 0, n*m)
 
 	groups := make([][]int, m)
 	for i := 0; i < m; i++ {
-		groups[i] = lits[factor*i : min(factor*(i+1), len(lits))]
-		result = append(result, cnfAtMost1Pairwise(c, groups[i])...)
+		groups[i] = lits[factor*i : min(factor*(i+1), n)]
+		result = append(result, _cnfAtMost1(c, groups[i], true)...)
 	}
 
-	binLength := getBinLength(m)
 	auxVars := c.requestLiterals(binLength)
 
 	for i := 0; i < m; i++ {
 		for _, lit := range groups[i] {
-			for k, aux := range auxVars {
+			for j, aux := range auxVars {
 				commanderLit := aux
-				if (i & (1 << k)) == 0 {
+				if (i & (1 << j)) == 0 {
 					commanderLit = -commanderLit
 				}
 				// lit -> commander
-				result = append(result, cnfAtLeast1(c, []int{-lit, commanderLit})...)
+				result = append(result, []int{-lit, commanderLit})
 			}
 		}
 	}
@@ -108,11 +131,8 @@ func cnfAtMost1Bimander(c CNFInterface, lits []int) [][]int {
 
 func getBinLength(m int) int {
 	len := 1
-	for {
-		if m <= len {
-			break
-		}
-		m <<= 1
+	for m > len {
+		len <<= 1
 	}
 	return len
 }

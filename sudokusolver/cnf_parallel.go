@@ -24,6 +24,11 @@ func (c *CNFParallel) lookup(lit int) bool {
 	return c.CNF.lookup(lit)
 }
 
+func (c *CNFParallel) addLit(lit int) {
+	c.CNF._addLit(lit)
+	c.addClause([]int{lit})
+}
+
 func (c *CNFParallel) addClause(clause []int) {
 	c.clauseChan <- [][]int{clause}
 }

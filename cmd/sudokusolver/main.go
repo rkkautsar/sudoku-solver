@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -75,7 +76,9 @@ func solve(mode, input string) {
 
 	if mode == "cnf" {
 		cnf := sudokusolver.GenerateCNFConstraints(&board)
-		cnf.Print(os.Stdout)
+		writer := bufio.NewWriter(os.Stdout)
+		cnf.Print(writer)
+		writer.Flush()
 		return
 	}
 

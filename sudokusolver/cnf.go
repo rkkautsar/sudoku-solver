@@ -8,6 +8,7 @@ import (
 )
 
 type CNFInterface interface {
+	addLit(lit int)
 	addClause(clause []int)
 	addClauses(clauses [][]int)
 	addFormula(lits []int, builder CNFBuilder)
@@ -34,6 +35,11 @@ type CNF struct {
 type CNFBuilder = func(c CNFInterface, lits []int) [][]int
 
 func (c *CNF) addLit(lit int) {
+	c._addLit(lit)
+	c.addClause([]int{lit})
+}
+
+func (c *CNF) _addLit(lit int) {
 	c.lits = append(c.lits, lit)
 	c.addClause([]int{lit})
 	if lit < 0 && -lit <= c.lookupLen {
@@ -93,7 +99,7 @@ func (c *CNF) Print(w io.Writer) {
 	fmt.Fprintf(w, "p cnf %d %d\n", c.nbVar, len(c.Clauses))
 	for _, c := range c.Clauses {
 		for _, l := range c {
-			fmt.Fprintf(w, "%d ", l)
+			fmt.Fprint(w, l)
 		}
 		fmt.Fprintln(w, 0)
 	}
