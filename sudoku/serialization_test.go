@@ -18,16 +18,17 @@ func TestParseFromString(t *testing.T) {
 	8 0 0 2 0 3 0 0 9
 	0 0 5 0 1 0 3 0 0`
 
-	sudokuBoard := NewFromString(exampleSudoku)
+	board := NewFromString(exampleSudoku)
 
-	assert.Equal(t, 3, sudokuBoard.Size)
-	assert.Equal(t, 32, len(sudokuBoard.Known))
+	assert.Equal(t, 3, board.Size)
+	assert.Equal(t, 3, board.Lookup[board.Idx(0, 2)])
+	assert.Equal(t, 3, board.Lookup[board.Idx(8, 6)])
 }
 
 func TestParseFromSingleRowString(t *testing.T) {
 	exampleSudoku := "........8..3...4...9..2..6.....79.......612...6.5.2.7...8...5...1.....2.4.5.....3"
-	sudokuBoard := NewFromString(exampleSudoku)
+	board := NewFromString(exampleSudoku)
 
-	assert.Equal(t, 3, sudokuBoard.Size)
-	assert.Equal(t, 22, len(sudokuBoard.Known))
+	assert.Equal(t, 3, board.Size)
+	assert.Equal(t, 3, board.Lookup[board.Idx(8, 8)])
 }

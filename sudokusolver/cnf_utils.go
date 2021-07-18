@@ -1,11 +1,11 @@
 package sudokusolver
 
 func cnfAtLeast1(c CNFInterface, lits []int) [][]int {
-	for _, lit := range lits {
-		if exists := c.lookupTrue(lit); exists {
-			return [][]int{}
-		}
-	}
+	// for _, lit := range lits {
+	// 	if exists := c.lookupTrue(lit); exists {
+	// 		return [][]int{}
+	// 	}
+	// }
 
 	return [][]int{lits}
 }
@@ -15,35 +15,42 @@ func cnfAtMost1(c CNFInterface, lits []int) [][]int {
 }
 
 func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
-	filteredLits := make([]int, 0, len(lits))
-	satisfyingLit := 0
-	for _, lit := range lits {
-		if !c.lookupTrue(-lit) {
-			filteredLits = append(filteredLits, lit)
-		} else if c.lookupTrue(lit) {
-			satisfyingLit = lit
-		}
-	}
+	// filteredLits := make([]int, 0, len(lits))
+	// satisfyingLit := 0
+	// for _, lit := range lits {
+	// 	if !c.lookupTrue(-lit) {
+	// 		filteredLits = append(filteredLits, lit)
+	// 	} else if c.lookupTrue(lit) {
+	// 		satisfyingLit = lit
+	// 	}
+	// }
 
-	if satisfyingLit != 0 {
-		for _, lit := range lits {
-			if satisfyingLit == lit || c.lookupTrue(-lit) {
-				continue
-			}
-			c.addLit(-lit)
-		}
-		return [][]int{}
-	}
+	// if satisfyingLit != 0 {
+	// 	for _, lit := range lits {
+	// 		if satisfyingLit == lit || c.lookupTrue(-lit) {
+	// 			continue
+	// 		}
+	// 		c.addLit(-lit)
+	// 	}
+	// 	return [][]int{}
+	// }
+
+	filteredLits := lits
 
 	if pairwise || len(filteredLits) < 6 {
 		return cnfAtMost1Pairwise(c, filteredLits)
 	}
 
-	// return cnfAtMost1Commander(c, filteredLits)
-	return cnfAtMost1Bimander(c, filteredLits)
+	return cnfAtMost1Commander(c, filteredLits)
+	// return cnfAtMost1Bimander(c, filteredLits)
 }
 
 func cnfExactly1(c CNFInterface, lits []int) [][]int {
+	if len(lits) <= 1 {
+		c.addLit(lits[0])
+		return [][]int{}
+	}
+
 	return append(cnfAtMost1(c, lits), cnfAtLeast1(c, lits)...)
 }
 
@@ -59,20 +66,22 @@ func cnfAtMost1Pairwise(c CNFInterface, lits []int) [][]int {
 	return result
 }
 
+const COMMANDER_FACTOR = 3
+
 // Will Klieber and Gihwon Kwon. 2007.
 // Efficient CNF Encoding for Selecting 1 from N Objects.
 func cnfAtMost1Commander(c CNFInterface, lits []int) [][]int {
-	if len(lits) <= 3 {
+	n := len(lits)
+	if n <= 3 {
 		return _cnfAtMost1(c, lits, true)
 	}
-
-	factor := 3
-	m := (len(lits) + factor - 1) / factor
-	result := make([][]int, 0, len(lits)*m)
+	m := (n + COMMANDER_FACTOR - 1) / COMMANDER_FACTOR
+	groupLen := (n + m - 1) / m
+	result := make([][]int, 0, n*m)
 
 	groups := make([][]int, m)
 	for i := 0; i < m; i++ {
-		groups[i] = lits[factor*i : min(factor*(i+1), len(lits))]
+		groups[i] = lits[groupLen*i : min(groupLen*(i+1), n)]
 		// 1. At most one variable in a group can be true
 		result = append(result, _cnfAtMost1(c, groups[i], true)...)
 	}
@@ -95,18 +104,20 @@ func cnfAtMost1Commander(c CNFInterface, lits []int) [][]int {
 	return result
 }
 
+const BIMANDER_FACTOR = 2
+
 // Nguyen, Van-Hau, and Son T. Mai. 2015.
 // A new method to encode the at-most-one constraint into SAT.
 func cnfAtMost1Bimander(c CNFInterface, lits []int) [][]int {
-	factor := 3
 	n := len(lits)
-	m := (n + factor - 1) / factor
+	m := (n + BIMANDER_FACTOR - 1) / BIMANDER_FACTOR
+	groupLen := (n + m - 1) / m
 	binLength := getBinLength(m)
 	result := make([][]int, 0, n*m)
 
 	groups := make([][]int, m)
 	for i := 0; i < m; i++ {
-		groups[i] = lits[factor*i : min(factor*(i+1), n)]
+		groups[i] = lits[groupLen*i : min(groupLen*(i+1), n)]
 		result = append(result, _cnfAtMost1(c, groups[i], true)...)
 	}
 

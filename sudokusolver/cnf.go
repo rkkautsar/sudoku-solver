@@ -90,6 +90,7 @@ func (c *CNF) addClauses(clauses [][]int) {
 }
 
 func (c *CNF) addFormula(lits []int, builder CNFBuilder) {
+	// log.Println("exactly one", lits)
 	formula := builder(c, lits)
 	c.addClauses(formula)
 }

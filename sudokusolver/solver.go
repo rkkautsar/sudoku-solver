@@ -42,7 +42,7 @@ func giniAddConstraints(g *gini.Gini, clauses [][]int) {
 
 func giniSolve(g *gini.Gini, board *sudoku.Board) {
 	g.Solve()
-	model := make([]bool, board.LenCells()*board.LenValues())
+	model := make([]bool, board.NumCandidates)
 	for i := 1; i <= len(model); i++ {
 		model[i-1] = g.Value(z.Dimacs2Lit(i))
 	}
@@ -76,7 +76,7 @@ func SolveWithCustomSolver(board *sudoku.Board, solver string) {
 	writer.Flush()
 	stdin.Close()
 
-	model := make([]bool, board.LenCells()*board.LenValues())
+	model := make([]bool, board.NumCandidates)
 
 	for reader.Scan() {
 		line := reader.Text()
@@ -147,38 +147,38 @@ func SolveManyGophersat(in io.Reader, out io.Writer) {
 func SolveManyGini(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	writer := bufio.NewWriter(out)
-	base := GetBase9x9Clauses()
-	g := gini.New()
-	// log.Println("new")
-	giniAddConstraints(g, base.getClauses())
-	// log.Println("constraints")
+	// base := GetBase9x9Clauses()
+	// g := gini.New()
+	// // log.Println("new")
+	// giniAddConstraints(g, base.getClauses())
+	// // log.Println("constraints")
 
 	for scanner.Scan() {
 		// log.Println("start")
 		input := scanner.Text()
 		board := sudoku.NewFromString(input)
-		cnf := &CNF{Board: board, nbVar: base.nbVar}
-		cnf.initializeLits()
-		actLits := make([]z.Lit, len(cnf.lits))
-		for i, l := range cnf.lits {
-			g.Add(z.Dimacs2Lit(l))
-			actLits[i] = g.Activate()
-		}
-		// log.Println("assume")
-		g.Assume(actLits...)
-		giniSolve(g, board)
-		// log.Println("solve")
+		SolveWithGini(board)
+		// cnf := &CNF{Board: board, nbVar: base.nbVar}
+		// actLits := make([]z.Lit, len(cnf.lits))
+		// for i, l := range cnf.lits {
+		// 	g.Add(z.Dimacs2Lit(l))
+		// 	actLits[i] = g.Activate()
+		// }
+		// // log.Println("assume")
+		// g.Assume(actLits...)
+		// giniSolve(g, board)
+		// // log.Println("solve")
 		board.PrintOneLine(writer)
-		for _, m := range actLits {
-			g.Deactivate(m)
-		}
+		// for _, m := range actLits {
+		// 	g.Deactivate(m)
+		// }
 		// log.Println("end")
 	}
 	writer.Flush()
 }
 
 func GetBase9x9Clauses() *CNF {
-	board := &sudoku.Board{Size: 3, Known: []*sudoku.Cell{}}
+	board := sudoku.New(3)
 	cnf := GenerateCNFConstraints(board)
 	return cnf.(*CNF)
 }
@@ -188,7 +188,6 @@ func SolveWithGophersatAndBase(board *sudoku.Board, base *CNF) {
 	copy(clauses, base.Clauses)
 
 	cnf := &CNF{Board: board, Clauses: clauses, nbVar: base.nbVar}
-	cnf.initializeLits()
 	cnf.lits = append(cnf.lits, base.lits...)
 	cnf.Simplify(SimplifyOptions{disablePureLiteralElimination: false})
 	pb := solver.ParseSlice(cnf.Clauses)

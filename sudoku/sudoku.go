@@ -5,185 +5,116 @@ import (
 )
 
 type Board struct {
-	Size        int
-	Known       []*Cell
-	KnownLookup []int
+	Size       int
+	Size2      int
+	Candidates []bool // lit
+	Lookup     []int  // idx
+
+	NumCandidates int
+	lit_cLit      []int // lit -> compressed lit, 1-indexed
+	cLit_lit      []int // compressed lit -> lit, 1-indexed
 }
 
-func (s *Board) LenValues() int {
-	return s.Size * s.Size
-}
+func New(size int) *Board {
+	size2 := size * size
+	candidates := make([]bool, size2*size2*size2+1)
+	board := &Board{
+		Size:   size,
+		Size2:  size2,
+		Lookup: make([]int, size2*size2),
 
-func (s *Board) LenRows() int {
-	return s.LenValues()
-}
-
-func (s *Board) LenCols() int {
-	return s.LenValues()
-}
-
-func (s *Board) LenCells() int {
-	return s.LenValues() * s.LenValues()
-}
-
-func (s *Board) LenBlocks() int {
-	return s.LenValues()
-}
-
-func (s *Board) Values() []int {
-	values := make([]int, s.LenValues())
-	for i := 1; i <= s.LenValues(); i++ {
-		values[i-1] = i
+		NumCandidates: len(candidates) - 1,
 	}
-	return values
-}
 
-func (s *Board) Rows() [][]*Cell {
-	rows := make([][]*Cell, s.LenRows())
-	for rowIndex := 0; rowIndex < s.LenRows(); rowIndex++ {
-		rows[rowIndex] = s.Row(rowIndex)
+	for i := 1; i < len(candidates); i++ {
+		candidates[i] = true
 	}
-	return rows
+
+	board.Candidates = candidates
+
+	return board
 }
 
-func (s *Board) Columns() [][]*Cell {
-	cols := make([][]*Cell, s.LenCols())
-	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
-		cols[colIndex] = s.Column(colIndex)
+func (b *Board) SetValue(row, col, val int, truth bool) {
+	if !truth {
+		lit := b.Lit(row, col, val)
+		if b.Candidates[lit] == false {
+			return
+		}
+		b.Candidates[lit] = false
+		b.NumCandidates--
+		return
 	}
-	return cols
-}
 
-func (s *Board) Blocks() [][]*Cell {
-	blocks := make([][]*Cell, s.LenBlocks())
-	for blkIndex := 0; blkIndex < s.LenBlocks(); blkIndex++ {
-		blocks[blkIndex] = s.Block(blkIndex)
-	}
-	return blocks
-}
+	b.Lookup[b.Idx(row, col)] = val
 
-func (s *Board) Cells() []*Cell {
-	cells := make([]*Cell, s.LenCells())
-	for _, row := range s.Rows() {
-		for _, cell := range row {
-			cells[cell.Index()] = cell
+	for i := 0; i < b.Size2; i++ {
+		if i+1 != val {
+			b.SetValue(row, col, i+1, false)
+		}
+		if i != row {
+			b.SetValue(i, col, val, false)
+		}
+		if i != col {
+			b.SetValue(row, i, val, false)
+		}
+		blkR := b.Size*(row/b.Size) + i/b.Size
+		blkC := b.Size*(col/b.Size) + i%b.Size
+		if blkR != row && blkC != col {
+			b.SetValue(blkR, blkC, val, false)
 		}
 	}
-	return cells
 }
 
-func (s *Board) Row(rowIndex int) []*Cell {
-	row := make([]*Cell, s.LenCols())
-	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
-		cell := s.NewCell(rowIndex, colIndex)
-		idx := cell.Index()
-		if s.KnownLookup != nil && idx < s.LenCells() && s.KnownLookup[idx] != 0 {
-			cell.Value = s.KnownLookup[idx]
-		}
-		row[colIndex] = cell
-	}
-	return row
-}
-
-func (s *Board) Column(colIndex int) []*Cell {
-	col := make([]*Cell, s.LenRows())
-	for rowIndex := 0; rowIndex < s.LenRows(); rowIndex++ {
-		cell := s.NewCell(rowIndex, colIndex)
-		col[rowIndex] = cell
-	}
-	return col
-}
-
-// example indexing if size = 2
-// 0 0 1 1
-// 0 0 1 1
-// 2 2 3 3
-// 2 2 3 3
-func (s *Board) Block(blkIndex int) []*Cell {
-	rowStart := (blkIndex / s.Size) * s.Size
-	colStart := (blkIndex % s.Size) * s.Size
-	block := make([]*Cell, s.LenValues())
-
-	idx := 0
-	for rowIndex := rowStart; rowIndex < rowStart+s.Size; rowIndex++ {
-		for colIndex := colStart; colIndex < colStart+s.Size; colIndex++ {
-			cell := s.NewCell(rowIndex, colIndex)
-			block[idx] = cell
-			idx++
-		}
-	}
-	return block
-}
-
-func (s *Board) NewCell(row int, col int) *Cell {
-	return &Cell{Row: row, Col: col, size: s.Size}
-}
-
-func (s *Board) NewCellFromLit(lit int) *Cell {
-	lit -= 1
-	val := 1 + (lit % s.LenValues())
-	lit /= s.LenValues()
-	col := lit % s.LenCols()
-	lit /= s.LenCols()
-	row := lit
-	return &Cell{Row: row, Col: col, Value: val, size: s.Size}
-}
-
-func (s *Board) GetLit(row int, col int, val int) int {
-	if val <= 0 {
-		panic("Value should not be <= 0")
-	}
-
-	cell := Cell{Row: row, Col: col, Value: val, size: s.Size}
-	return cell.toInt()
-}
-
-func (s *Board) generateKnownLookup() {
-	s.KnownLookup = make([]int, s.LenCells())
-	for _, cell := range s.Known {
-		if cell.Index() >= s.LenCells() {
+func (b *Board) InitCompressedLits() {
+	b.lit_cLit = make([]int, len(b.Candidates)+1)
+	b.cLit_lit = make([]int, b.NumCandidates+1)
+	j := 1
+	for i := 1; i < len(b.Candidates); i++ {
+		if !b.Candidates[i] {
 			continue
 		}
-		s.KnownLookup[cell.Index()] = cell.Value
+		b.lit_cLit[i] = j
+		b.cLit_lit[j] = i
+		j++
 	}
 }
 
-func (s *Board) SolveWithModel(model []bool) {
-	s.Known = make([]*Cell, 0, s.LenCells())
-
-	for lit, val := range model {
-		if !val {
+// from model of compressed lits
+func (b *Board) SolveWithModel(model []bool) {
+	// for i := 1; i < len(b.Candidates); i++ {
+	//   if !model[i-1] {
+	//     continue
+	//   }
+	//   lit := b.cLit_lit[i]
+	//   b.Lookup[(lit-1)/b.Size2] = 1 + (lit-1)%b.Size2
+	// }
+	for i, m := range model {
+		if !m {
 			continue
 		}
-
-		s.Known = append(s.Known, s.NewCellFromLit(lit+1))
+		if i > len(b.Candidates) {
+			break
+		}
+		lit := b.cLit_lit[i+1]
+		// log.Println(i+1, lit, (lit-1)/b.Size2, 1+(lit-1)%b.Size2)
+		b.Lookup[(lit-1)/b.Size2] = 1 + (lit-1)%b.Size2
 	}
-
-	s.generateKnownLookup()
 }
 
-type Cell struct {
-	Row   int // 0-based
-	Col   int // 0-based
-	Value int
-	size  int
+// 1-indexed
+func (b *Board) Lit(row, col, val int) int {
+	return 1 + b.Idx(row, col)*b.Size2 + (val - 1)
 }
 
-func (cell *Cell) Index() int {
-	size2 := cell.size * cell.size
-	return (cell.Row*size2 + cell.Col)
+// 1-indexed
+func (b *Board) CLit(row, col, val int) int {
+	return b.lit_cLit[b.Lit(row, col, val)]
 }
 
-func (cell *Cell) toInt() int {
-	size2 := cell.size * cell.size
-	if cell.Value < 0 {
-		panic("cell value < 0")
-	}
-	return 1 + cell.Row*(size2*size2) + cell.Col*size2 + (cell.Value - 1)
-}
-
-func (cell *Cell) BlockIndex() int {
-	return (cell.Row/cell.size)*cell.size + (cell.Col / cell.size)
+// 0-indexed
+func (b *Board) Idx(row, col int) int {
+	return row*b.Size2 + col
 }
 
 func getSize(size2 int) int {
