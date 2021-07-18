@@ -51,7 +51,8 @@ func main() {
 	}
 
 	if isManyMode {
-		sudokusolver.SolveMany()
+		// sudokusolver.SolveManyGophersat(os.Stdin, os.Stdout)
+		sudokusolver.SolveManyGini(os.Stdin, os.Stdout)
 	} else {
 		bytes, _ := ioutil.ReadAll(os.Stdin)
 		input := string(bytes)
@@ -75,7 +76,7 @@ func solve(mode, input string) {
 	board := sudoku.NewFromString(input)
 
 	if mode == "cnf" {
-		cnf := sudokusolver.GenerateCNFConstraints(&board)
+		cnf := sudokusolver.GenerateCNFConstraints(board)
 		writer := bufio.NewWriter(os.Stdout)
 		cnf.Print(writer)
 		writer.Flush()
@@ -83,11 +84,11 @@ func solve(mode, input string) {
 	}
 
 	if mode == "solve" {
-		sudokusolver.SolveWithGophersat(&board)
+		sudokusolver.SolveWithGini(board)
 	}
 
 	if mode == "custom" {
-		sudokusolver.SolveWithCustomSolver(&board, customSolver)
+		sudokusolver.SolveWithCustomSolver(board, customSolver)
 	}
 
 	board.Print(os.Stdout)

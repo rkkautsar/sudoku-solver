@@ -3,7 +3,7 @@ package sudokusolver
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"os/exec"
 	"sort"
 	"strconv"
@@ -11,16 +11,45 @@ import (
 
 	"github.com/crillab/gophersat/explain"
 	"github.com/crillab/gophersat/solver"
+	"github.com/irifrance/gini"
+	"github.com/irifrance/gini/z"
 	"github.com/rkkautsar/sudoku-solver/sudoku"
 )
 
-func SolveWithGophersat(board *sudoku.SudokuBoard) {
+func SolveWithGophersat(board *sudoku.Board) {
 	cnf := GenerateCNFConstraints(board)
 	pb := solver.ParseSlice(cnf.getClauses())
 	solvePbWithGophersat(board, pb)
 }
 
-func solvePbWithGophersat(board *sudoku.SudokuBoard, pb *solver.Problem) {
+func SolveWithGini(board *sudoku.Board) {
+	g := gini.New()
+	cnf := GenerateCNFConstraints(board)
+	giniAddConstraints(g, cnf.getClauses())
+	giniSolve(g, board)
+}
+
+func giniAddConstraints(g *gini.Gini, clauses [][]int) {
+	for _, clause := range clauses {
+		// log.Println("add clause", clause)
+		for _, lit := range clause {
+			g.Add(z.Dimacs2Lit(lit))
+			// log.Println("add lit", lit)
+		}
+		g.Add(0)
+	}
+}
+
+func giniSolve(g *gini.Gini, board *sudoku.Board) {
+	g.Solve()
+	model := make([]bool, board.LenCells()*board.LenValues())
+	for i := 1; i <= len(model); i++ {
+		model[i-1] = g.Value(z.Dimacs2Lit(i))
+	}
+	board.SolveWithModel(model)
+}
+
+func solvePbWithGophersat(board *sudoku.Board, pb *solver.Problem) {
 	s := solver.New(pb)
 	status := s.Solve()
 
@@ -32,7 +61,7 @@ func solvePbWithGophersat(board *sudoku.SudokuBoard, pb *solver.Problem) {
 	board.SolveWithModel(s.Model())
 }
 
-func SolveWithCustomSolver(board *sudoku.SudokuBoard, solver string) {
+func SolveWithCustomSolver(board *sudoku.Board, solver string) {
 	solverArgs := strings.Split(solver, " ")
 	cmd := exec.Command(solverArgs[0], solverArgs[1:]...)
 	stdin, _ := cmd.StdinPipe()
@@ -101,29 +130,67 @@ func ExplainUnsat(pb *solver.Problem) {
 }
 
 // only support gophersat since otherwise it has the overhead of spawning subproc
-func SolveMany() {
-	scanner := bufio.NewScanner(os.Stdin)
-	writer := bufio.NewWriter(os.Stdout)
+func SolveManyGophersat(in io.Reader, out io.Writer) {
+	scanner := bufio.NewScanner(in)
+	writer := bufio.NewWriter(out)
 	base := GetBase9x9Clauses()
 
 	for scanner.Scan() {
 		input := scanner.Text()
 		board := sudoku.NewFromString(input)
-		SolveWithGophersatAndBase(&board, base)
+		SolveWithGophersatAndBase(board, base)
 		board.PrintOneLine(writer)
 	}
 	writer.Flush()
 }
 
-func GetBase9x9Clauses() [][]int {
-	board := sudoku.SudokuBoard{Size: 3, Known: []*sudoku.Cell{}}
-	cnf := GenerateCNFConstraints(&board)
-	return cnf.getClauses()
+func SolveManyGini(in io.Reader, out io.Writer) {
+	scanner := bufio.NewScanner(in)
+	writer := bufio.NewWriter(out)
+	base := GetBase9x9Clauses()
+	g := gini.New()
+	// log.Println("new")
+	giniAddConstraints(g, base.getClauses())
+	// log.Println("constraints")
+
+	for scanner.Scan() {
+		// log.Println("start")
+		input := scanner.Text()
+		board := sudoku.NewFromString(input)
+		cnf := &CNF{Board: board, nbVar: base.nbVar}
+		cnf.initializeLits()
+		actLits := make([]z.Lit, len(cnf.lits))
+		for i, l := range cnf.lits {
+			g.Add(z.Dimacs2Lit(l))
+			actLits[i] = g.Activate()
+		}
+		// log.Println("assume")
+		g.Assume(actLits...)
+		giniSolve(g, board)
+		// log.Println("solve")
+		board.PrintOneLine(writer)
+		for _, m := range actLits {
+			g.Deactivate(m)
+		}
+		// log.Println("end")
+	}
+	writer.Flush()
 }
 
-func SolveWithGophersatAndBase(board *sudoku.SudokuBoard, base [][]int) {
-	cnf := &CNF{Board: board, Clauses: base}
+func GetBase9x9Clauses() *CNF {
+	board := &sudoku.Board{Size: 3, Known: []*sudoku.Cell{}}
+	cnf := GenerateCNFConstraints(board)
+	return cnf.(*CNF)
+}
+
+func SolveWithGophersatAndBase(board *sudoku.Board, base *CNF) {
+	clauses := make([][]int, len(base.Clauses))
+	copy(clauses, base.Clauses)
+
+	cnf := &CNF{Board: board, Clauses: clauses, nbVar: base.nbVar}
 	cnf.initializeLits()
+	cnf.lits = append(cnf.lits, base.lits...)
+	cnf.Simplify(SimplifyOptions{disablePureLiteralElimination: false})
 	pb := solver.ParseSlice(cnf.Clauses)
 	solvePbWithGophersat(board, pb)
 }

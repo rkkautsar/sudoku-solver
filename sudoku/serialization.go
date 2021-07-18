@@ -1,11 +1,11 @@
 package sudoku
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"math"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -18,36 +18,33 @@ Parse newline and space separated sudoku problem
 0 0 1 ...
 ...
 */
-func NewFromString(input string) SudokuBoard {
+func NewFromString(input string) *Board {
 	input = strings.Trim(input, " \n\t")
 	input = SPACE_REGEX.ReplaceAllString(input, " ")
+	input = strings.ReplaceAll(input, ".", "0")
 
 	// standard 9x9 single row
 	if strings.Index(input, "\n") == -1 {
 		return NewFromSingleRowString(input)
 	}
 
+	r := bufio.NewReader(strings.NewReader(input))
+
 	rows := strings.Split(input, "\n")
 	size2 := len(rows)
 	cells := make([][]int, size2)
 
-	for i, row := range rows {
-		row = strings.Trim(row, " \t")
-		// row = space.ReplaceAllString(row, " ")
-		cols := strings.Split(row, " ")
-
+	for i := 0; i < size2; i++ {
 		cells[i] = make([]int, size2)
-		for j, col := range cols {
-			if parsed, err := strconv.Atoi(col); err == nil {
-				cells[i][j] = parsed
-			}
+		for j := 0; j < size2; j++ {
+			fmt.Fscan(r, &cells[i][j])
 		}
 	}
 
 	return NewFromArray(cells)
 }
 
-func NewFromSingleRowString(input string) SudokuBoard {
+func NewFromSingleRowString(input string) *Board {
 	size2 := 9
 	size := 3
 	// at least 17 clue needed
@@ -64,7 +61,7 @@ func NewFromSingleRowString(input string) SudokuBoard {
 		}
 	}
 
-	board := SudokuBoard{
+	board := &Board{
 		Known: known,
 		Size:  size,
 	}
@@ -72,7 +69,7 @@ func NewFromSingleRowString(input string) SudokuBoard {
 	return board
 }
 
-func NewFromArray(cells [][]int) SudokuBoard {
+func NewFromArray(cells [][]int) *Board {
 	size2 := len(cells)
 	size := getSize(size2)
 
@@ -94,7 +91,7 @@ func NewFromArray(cells [][]int) SudokuBoard {
 		}
 	}
 
-	board := SudokuBoard{
+	board := &Board{
 		Known: known,
 		Size:  size,
 	}
@@ -102,7 +99,7 @@ func NewFromArray(cells [][]int) SudokuBoard {
 	return board
 }
 
-func (s *SudokuBoard) Print(w io.Writer) {
+func (s *Board) Print(w io.Writer) {
 	charLen := int(math.Floor(math.Log10(float64(s.LenCells()))))
 	formatter := fmt.Sprintf("%%%dd", charLen)
 
@@ -117,7 +114,7 @@ func (s *SudokuBoard) Print(w io.Writer) {
 	}
 }
 
-func (s *SudokuBoard) PrintOneLine(w io.Writer) {
+func (s *Board) PrintOneLine(w io.Writer) {
 	for _, cell := range s.Cells() {
 		fmt.Fprint(w, cell.Value)
 	}

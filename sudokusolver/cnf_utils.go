@@ -2,7 +2,7 @@ package sudokusolver
 
 func cnfAtLeast1(c CNFInterface, lits []int) [][]int {
 	for _, lit := range lits {
-		if exists := c.lookup(lit); exists {
+		if exists := c.lookupTrue(lit); exists {
 			return [][]int{}
 		}
 	}
@@ -18,17 +18,16 @@ func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
 	filteredLits := make([]int, 0, len(lits))
 	satisfyingLit := 0
 	for _, lit := range lits {
-
-		if !c.lookup(-lit) {
+		if !c.lookupTrue(-lit) {
 			filteredLits = append(filteredLits, lit)
-		} else if c.lookup(lit) {
+		} else if c.lookupTrue(lit) {
 			satisfyingLit = lit
 		}
 	}
 
 	if satisfyingLit != 0 {
 		for _, lit := range lits {
-			if satisfyingLit == lit || c.lookup(-lit) {
+			if satisfyingLit == lit || c.lookupTrue(-lit) {
 				continue
 			}
 			c.addLit(-lit)
@@ -36,7 +35,7 @@ func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
 		return [][]int{}
 	}
 
-	if pairwise {
+	if pairwise || len(filteredLits) < 6 {
 		return cnfAtMost1Pairwise(c, filteredLits)
 	}
 
@@ -99,7 +98,7 @@ func cnfAtMost1Commander(c CNFInterface, lits []int) [][]int {
 // Nguyen, Van-Hau, and Son T. Mai. 2015.
 // A new method to encode the at-most-one constraint into SAT.
 func cnfAtMost1Bimander(c CNFInterface, lits []int) [][]int {
-	factor := 2
+	factor := 3
 	n := len(lits)
 	m := (n + factor - 1) / factor
 	binLength := getBinLength(m)

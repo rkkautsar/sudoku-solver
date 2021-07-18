@@ -4,33 +4,33 @@ import (
 	"math"
 )
 
-type SudokuBoard struct {
+type Board struct {
 	Size        int
 	Known       []*Cell
 	KnownLookup []int
 }
 
-func (s *SudokuBoard) LenValues() int {
+func (s *Board) LenValues() int {
 	return s.Size * s.Size
 }
 
-func (s *SudokuBoard) LenRows() int {
+func (s *Board) LenRows() int {
 	return s.LenValues()
 }
 
-func (s *SudokuBoard) LenCols() int {
+func (s *Board) LenCols() int {
 	return s.LenValues()
 }
 
-func (s *SudokuBoard) LenCells() int {
+func (s *Board) LenCells() int {
 	return s.LenValues() * s.LenValues()
 }
 
-func (s *SudokuBoard) LenBlocks() int {
+func (s *Board) LenBlocks() int {
 	return s.LenValues()
 }
 
-func (s *SudokuBoard) Values() []int {
+func (s *Board) Values() []int {
 	values := make([]int, s.LenValues())
 	for i := 1; i <= s.LenValues(); i++ {
 		values[i-1] = i
@@ -38,7 +38,7 @@ func (s *SudokuBoard) Values() []int {
 	return values
 }
 
-func (s *SudokuBoard) Rows() [][]*Cell {
+func (s *Board) Rows() [][]*Cell {
 	rows := make([][]*Cell, s.LenRows())
 	for rowIndex := 0; rowIndex < s.LenRows(); rowIndex++ {
 		rows[rowIndex] = s.Row(rowIndex)
@@ -46,7 +46,7 @@ func (s *SudokuBoard) Rows() [][]*Cell {
 	return rows
 }
 
-func (s *SudokuBoard) Columns() [][]*Cell {
+func (s *Board) Columns() [][]*Cell {
 	cols := make([][]*Cell, s.LenCols())
 	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
 		cols[colIndex] = s.Column(colIndex)
@@ -54,7 +54,7 @@ func (s *SudokuBoard) Columns() [][]*Cell {
 	return cols
 }
 
-func (s *SudokuBoard) Blocks() [][]*Cell {
+func (s *Board) Blocks() [][]*Cell {
 	blocks := make([][]*Cell, s.LenBlocks())
 	for blkIndex := 0; blkIndex < s.LenBlocks(); blkIndex++ {
 		blocks[blkIndex] = s.Block(blkIndex)
@@ -62,7 +62,7 @@ func (s *SudokuBoard) Blocks() [][]*Cell {
 	return blocks
 }
 
-func (s *SudokuBoard) Cells() []*Cell {
+func (s *Board) Cells() []*Cell {
 	cells := make([]*Cell, s.LenCells())
 	for _, row := range s.Rows() {
 		for _, cell := range row {
@@ -72,7 +72,7 @@ func (s *SudokuBoard) Cells() []*Cell {
 	return cells
 }
 
-func (s *SudokuBoard) Row(rowIndex int) []*Cell {
+func (s *Board) Row(rowIndex int) []*Cell {
 	row := make([]*Cell, s.LenCols())
 	for colIndex := 0; colIndex < s.LenCols(); colIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
@@ -85,7 +85,7 @@ func (s *SudokuBoard) Row(rowIndex int) []*Cell {
 	return row
 }
 
-func (s *SudokuBoard) Column(colIndex int) []*Cell {
+func (s *Board) Column(colIndex int) []*Cell {
 	col := make([]*Cell, s.LenRows())
 	for rowIndex := 0; rowIndex < s.LenRows(); rowIndex++ {
 		cell := s.NewCell(rowIndex, colIndex)
@@ -99,7 +99,7 @@ func (s *SudokuBoard) Column(colIndex int) []*Cell {
 // 0 0 1 1
 // 2 2 3 3
 // 2 2 3 3
-func (s *SudokuBoard) Block(blkIndex int) []*Cell {
+func (s *Board) Block(blkIndex int) []*Cell {
 	rowStart := (blkIndex / s.Size) * s.Size
 	colStart := (blkIndex % s.Size) * s.Size
 	block := make([]*Cell, s.LenValues())
@@ -115,11 +115,11 @@ func (s *SudokuBoard) Block(blkIndex int) []*Cell {
 	return block
 }
 
-func (s *SudokuBoard) NewCell(row int, col int) *Cell {
+func (s *Board) NewCell(row int, col int) *Cell {
 	return &Cell{Row: row, Col: col, size: s.Size}
 }
 
-func (s *SudokuBoard) NewCellFromLit(lit int) *Cell {
+func (s *Board) NewCellFromLit(lit int) *Cell {
 	lit -= 1
 	val := 1 + (lit % s.LenValues())
 	lit /= s.LenValues()
@@ -129,7 +129,7 @@ func (s *SudokuBoard) NewCellFromLit(lit int) *Cell {
 	return &Cell{Row: row, Col: col, Value: val, size: s.Size}
 }
 
-func (s *SudokuBoard) GetLit(row int, col int, val int) int {
+func (s *Board) GetLit(row int, col int, val int) int {
 	if val <= 0 {
 		panic("Value should not be <= 0")
 	}
@@ -138,7 +138,7 @@ func (s *SudokuBoard) GetLit(row int, col int, val int) int {
 	return cell.toInt()
 }
 
-func (s *SudokuBoard) generateKnownLookup() {
+func (s *Board) generateKnownLookup() {
 	s.KnownLookup = make([]int, s.LenCells())
 	for _, cell := range s.Known {
 		if cell.Index() >= s.LenCells() {
@@ -148,7 +148,7 @@ func (s *SudokuBoard) generateKnownLookup() {
 	}
 }
 
-func (s *SudokuBoard) SolveWithModel(model []bool) {
+func (s *Board) SolveWithModel(model []bool) {
 	s.Known = make([]*Cell, 0, s.LenCells())
 
 	for lit, val := range model {

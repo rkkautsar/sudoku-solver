@@ -2,6 +2,8 @@ github.com/crillab/gophersat v1.3.2-0.20210701121804-72b19f5b6b38 h1:sOsE90v/iPm
 github.com/crillab/gophersat v1.3.2-0.20210701121804-72b19f5b6b38/go.mod h1:S91tHga1PCZzYhCkStwZAhvp1rCc+zqtSi55I+vDWGc=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/irifrance/gini v1.0.1 h1:oTABiARLoRsnTmda0uY2u2e5kfm8e6meBZB19lf5xhE=
+github.com/irifrance/gini v1.0.1/go.mod h1:swH5OTtiG/X/YrU06r288qZwq6I1agpbuXQOB55xqGU=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=

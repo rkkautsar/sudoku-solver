@@ -2,8 +2,8 @@ package sudokusolver
 
 import (
 	"io"
-	"runtime"
 	"sync"
+	"sync/atomic"
 
 	"github.com/rkkautsar/sudoku-solver/sudoku"
 )
@@ -15,18 +15,16 @@ type CNFParallel struct {
 	managerWg   sync.WaitGroup
 	workChan    chan WorkRequest
 	clauseChan  chan [][]int
-	literalChan chan NewLiteralRequest
 	doneChan    chan bool
 	workerCount int
 }
 
-func (c *CNFParallel) lookup(lit int) bool {
-	return c.CNF.lookup(lit)
+func (c *CNFParallel) lookupTrue(lit int) bool {
+	return c.CNF.lookupTrue(lit)
 }
 
 func (c *CNFParallel) addLit(lit int) {
-	c.CNF._addLit(lit)
-	c.addClause([]int{lit})
+	c.CNF.addLit(lit)
 }
 
 func (c *CNFParallel) addClause(clause []int) {
@@ -45,7 +43,7 @@ func (c *CNFParallel) setInitialNbVar(nbVar int) {
 	c.CNF.setInitialNbVar(nbVar)
 }
 
-func (c *CNFParallel) getBoard() *sudoku.SudokuBoard {
+func (c *CNFParallel) getBoard() *sudoku.Board {
 	return c.CNF.getBoard()
 }
 
@@ -58,23 +56,20 @@ func (c *CNFParallel) getClauses() [][]int {
 }
 
 func (c *CNFParallel) requestLiterals(num int) []int {
-	resp := make(chan []int)
-	c.literalChan <- NewLiteralRequest{num, resp}
-	lits := <-resp
-	return lits
+	newNbVar := atomic.AddInt32(&c.nbVar, int32(num))
+	return makeRange(int(newNbVar)-num+1, int(newNbVar))
 }
 
 func (c *CNFParallel) initWorkers() {
 	var managerWg, workerWg sync.WaitGroup
 	c.managerWg = managerWg
 	c.workerWg = workerWg
-	c.workChan = make(chan WorkRequest)
-	c.clauseChan = make(chan [][]int)
-	c.literalChan = make(chan NewLiteralRequest)
-	c.doneChan = make(chan bool)
+	c.workChan = make(chan WorkRequest, c.workerCount)
+	c.clauseChan = make(chan [][]int, 100)
+	c.doneChan = make(chan bool, c.workerCount)
 	go manager(c)
 
-	c.workerCount = runtime.NumCPU() - 2
+	c.workerCount = 2
 	if c.workerCount <= 0 {
 		c.workerCount = 1
 	}
@@ -86,7 +81,6 @@ func (c *CNFParallel) initWorkers() {
 func (c *CNFParallel) closeAndWait() {
 	close(c.workChan)
 	c.workerWg.Wait()
-	close(c.literalChan)
 	close(c.clauseChan)
 	c.managerWg.Wait()
 }
@@ -98,11 +92,6 @@ func (c *CNFParallel) Print(w io.Writer) {
 type WorkRequest struct {
 	lits    []int
 	builder CNFBuilder
-}
-
-type NewLiteralRequest struct {
-	num  int
-	resp chan []int
 }
 
 func worker(cnf *CNFParallel) {
@@ -121,10 +110,6 @@ func manager(cnf *CNFParallel) {
 		select {
 		case clauses := <-cnf.clauseChan:
 			cnf.Clauses = append(cnf.Clauses, clauses...)
-		case request := <-cnf.literalChan:
-			lits := makeRange(cnf.nbVar+1, cnf.nbVar+request.num)
-			cnf.nbVar += request.num
-			request.resp <- lits
 		case <-cnf.doneChan:
 			n--
 		}

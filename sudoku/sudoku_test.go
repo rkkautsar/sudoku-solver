@@ -7,7 +7,7 @@ import (
 )
 
 func TestLit(t *testing.T) {
-	s := SudokuBoard{Size: 2}
+	s := &Board{Size: 2}
 
 	assert.Equal(t, 1, s.GetLit(0, 0, 1))
 	assert.Equal(t, 4, s.GetLit(0, 0, 4))

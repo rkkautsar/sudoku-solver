@@ -1,4 +1,5 @@
 bin/
 *.prof
 result.txt
+result.log
 *.test
