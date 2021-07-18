@@ -13,7 +13,7 @@ Featuring:
 - has built-in SAT solver (gophersat) or can use custom SAT solver
 - bimander encoding for at-most-one
 - parallel CNF encoding
-- fast, but not as fast as specialized solvers (1.8ms for ai-escargot, naïve backtracking is around 30ms)
+- fast, but not as fast as specialized solvers (0.6ms for ai-escargot, naïve backtracking is around 30ms)
 - pretty fast for larger sudokus (with custom state of the art SAT solver like cadical, 144x144 took 20s, may be better if using parallel SAT solvers)
 - pretty simple code
 
@@ -31,28 +31,29 @@ go test -run=XXX -benchmem -bench=. ./sudokusolver
 goos: darwin
 goarch: amd64
 pkg: github.com/rkkautsar/sudoku-solver/sudokusolver
-BenchmarkSolveAiEscargot-12               	     716	   1806322 ns/op	  490891 B/op	    3592 allocs/op
-BenchmarkSolveHard9x9-12                  	     912	   1285606 ns/op	  609571 B/op	    4249 allocs/op
-BenchmarkSolve17clue9x9-12                	    1263	    934811 ns/op	  905213 B/op	    5778 allocs/op
-BenchmarkSolve25x25-12                    	      64	  16796403 ns/op	 8465768 B/op	   64830 allocs/op
-BenchmarkSolve64x64-12                    	       1	2054103411 ns/op	72338888 B/op	  311863 allocs/op
-BenchmarkSolve81x81-12                    	       3	 343304668 ns/op	134011749 B/op	  670371 allocs/op
-BenchmarkSolve100x100-12                  	       5	 228876627 ns/op	173762048 B/op	  568441 allocs/op
-BenchmarkSolve144x144-12                  	       2	 654317958 ns/op	540966420 B/op	 1775294 allocs/op
-BenchmarkSolveWithCadicalAiEscargot-12    	      78	  13209624 ns/op	  270865 B/op	    4723 allocs/op
-BenchmarkSolveWithCadicalHard9x9-12       	     120	  10153001 ns/op	  310502 B/op	    6029 allocs/op
-BenchmarkSolveWithCadicalHard17clue-12    	     100	  10160937 ns/op	  477742 B/op	    8500 allocs/op
-BenchmarkSolveWithCadical25x25-12         	      24	  46477649 ns/op	 4841759 B/op	   90033 allocs/op
-BenchmarkSolveWithCadical64x64-12         	       1	1834994077 ns/op	43759320 B/op	  409028 allocs/op
-BenchmarkSolveWithCadical64x64Hard-12     	       1	66145999146 ns/op	50348200 B/op	  574721 allocs/op
-BenchmarkSolveWithCadical81x81-12         	       2	 658297041 ns/op	95692532 B/op	  924668 allocs/op
-BenchmarkSolveWithCadical100x100-12       	       3	 501373854 ns/op	144273909 B/op	  811773 allocs/op
-BenchmarkSolveWithCadical144x144-12       	       1	1429326864 ns/op	430382712 B/op	 2491800 allocs/op
-BenchmarkSolveManyHardest110626-12        	       2	 817315026 ns/op	232346776 B/op	 1638300 allocs/op
-BenchmarkSolveMany17Clue2k-12             	       1	2133558634 ns/op	1782471736 B/op	11993486 allocs/op
-BenchmarkSolveMany17Clue-12               	       1	51558690517 ns/op	44412021688 B/op	298044564 allocs/op
+BenchmarkSolveAiEscargot-12               	    1711	    663113 ns/op	  603690 B/op	    3984 allocs/op
+BenchmarkSolveHard9x9-12                  	     656	   1819127 ns/op	  745202 B/op	    5069 allocs/op
+BenchmarkSolve17clue9x9-12                	     918	   1242395 ns/op	 1213969 B/op	    7963 allocs/op
+BenchmarkSolve25x25-12                    	      43	  23817584 ns/op	15700733 B/op	  109126 allocs/op
+BenchmarkSolve64x64-12                    	       3	 405321750 ns/op	99750616 B/op	  498922 allocs/op
+BenchmarkSolve81x81-12                    	       3	 467102880 ns/op	241131421 B/op	 1335135 allocs/op
+BenchmarkSolve100x100-12                  	       4	 303379450 ns/op	232606390 B/op	  917229 allocs/op
+BenchmarkSolve144x144-12                  	       2	 884218184 ns/op	751492956 B/op	 3344856 allocs/op
+BenchmarkSolve225x225-12                  	       1	2679304741 ns/op	1457409928 B/op	 1205887 allocs/op
+BenchmarkSolveWithCadicalAiEscargot-12    	      58	  18298219 ns/op	  303392 B/op	    5747 allocs/op
+BenchmarkSolveWithCadicalHard9x9-12       	     114	  11335283 ns/op	  431605 B/op	    7209 allocs/op
+BenchmarkSolveWithCadicalHard17clue-12    	      93	  12866351 ns/op	  734494 B/op	   12246 allocs/op
+BenchmarkSolveWithCadical25x25-12         	      15	  77647577 ns/op	 9598772 B/op	  176605 allocs/op
+BenchmarkSolveWithCadical64x64-12         	       1	2314926730 ns/op	59734048 B/op	  827781 allocs/op
+BenchmarkSolveWithCadical81x81-12         	       1	1364799701 ns/op	149652664 B/op	 2407136 allocs/op
+BenchmarkSolveWithCadical100x100-12       	       2	 744538528 ns/op	171159232 B/op	 1508925 allocs/op
+BenchmarkSolveWithCadical144x144-12       	       1	2212441629 ns/op	556941648 B/op	 5890258 allocs/op
+BenchmarkSolveWithCadical225x225-12       	       1	2814346249 ns/op	1404577904 B/op	 2020374 allocs/op
+BenchmarkSolveManyHardest110626-12        	       1	2680093046 ns/op	29963776 B/op	   92572 allocs/op
+BenchmarkSolveMany17Clue2k-12             	       1	1508717751 ns/op	18968024 B/op	   97994 allocs/op
+BenchmarkSolveMany17Clue-12               	       1	67656855355 ns/op	194538384 B/op	 1224765 allocs/op
 PASS
-ok  	github.com/rkkautsar/sudoku-solver/sudokusolver	151.958s
+ok  	github.com/rkkautsar/sudoku-solver/sudokusolver	111.019s
 ```
 
 ## Getting Started
@@ -87,7 +88,8 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 
 Inspiration, code snippets, etc.
 
-- [Gophersat](https://github.com/crillab/gophersat)
+- [gini](https://github.com/irifrance/gini)
+- [tdoku](https://github.com/t-dillon/tdoku)
 - Kwon, Gihwon, and Himanshu Jain. "Optimized CNF encoding for sudoku puzzles." Proc. 13th International Conference on Logic for Programming Artificial Intelligence and Reasoning (LPAR2006). 2006. ([PDF](http://www.cs.cmu.edu/~hjain/papers/sudoku-as-SAT.pdf))
 - Klieber, Will, and Gihwon Kwon. "Efficient CNF encoding for selecting 1 from n objects." Proc. International Workshop on Constraints in Formal Verification. 2007. ([PDF](https://www.cs.cmu.edu/~wklieber/papers/2007_efficient-cnf-encoding-for-selecting-1.pdf))
 - Nguyen, Van-Hau, and Son T. Mai. "A new method to encode the at-most-one constraint into SAT." Proceedings of the Sixth International Symposium on Information and Communication Technology. 2015. ([PDF](https://www.researchgate.net/profile/Van-Hau-Nguyen/publication/301455290_A_New_Method_to_Encode_the_At-Most-One_Constraint_into_SAT/links/5d2bfbaba6fdcc2462e0e269/A-New-Method-to-Encode-the-At-Most-One-Constraint-into-SAT.pdf))

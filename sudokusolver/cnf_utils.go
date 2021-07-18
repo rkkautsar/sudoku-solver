@@ -41,8 +41,8 @@ func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
 		return cnfAtMost1Pairwise(c, filteredLits)
 	}
 
-	return cnfAtMost1Commander(c, filteredLits)
-	// return cnfAtMost1Bimander(c, filteredLits)
+	// return cnfAtMost1Commander(c, filteredLits)
+	return cnfAtMost1Bimander(c, filteredLits)
 }
 
 func cnfExactly1(c CNFInterface, lits []int) [][]int {

@@ -19,6 +19,10 @@ type CNFParallel struct {
 	workerCount int
 }
 
+func (c *CNFParallel) clauseLen() int {
+	return c.CNF.clauseLen()
+}
+
 func (c *CNFParallel) lookupTrue(lit int) bool {
 	return c.CNF.lookupTrue(lit)
 }

@@ -38,15 +38,17 @@ func New(size int) *Board {
 func (b *Board) SetValue(row, col, val int, truth bool) {
 	if !truth {
 		lit := b.Lit(row, col, val)
-		if b.Candidates[lit] == false {
-			return
-		}
+		prev := b.Candidates[lit]
 		b.Candidates[lit] = false
-		b.NumCandidates--
+		if prev {
+			b.NumCandidates--
+		}
 		return
 	}
 
 	b.Lookup[b.Idx(row, col)] = val
+	blkRStart := b.Size * (row / b.Size)
+	blkCStart := b.Size * (col / b.Size)
 
 	for i := 0; i < b.Size2; i++ {
 		if i+1 != val {
@@ -58,8 +60,8 @@ func (b *Board) SetValue(row, col, val int, truth bool) {
 		if i != col {
 			b.SetValue(row, i, val, false)
 		}
-		blkR := b.Size*(row/b.Size) + i/b.Size
-		blkC := b.Size*(col/b.Size) + i%b.Size
+		blkR := blkRStart + i/b.Size
+		blkC := blkCStart + i%b.Size
 		if blkR != row && blkC != col {
 			b.SetValue(blkR, blkC, val, false)
 		}
@@ -89,17 +91,21 @@ func (b *Board) SolveWithModel(model []bool) {
 	//   lit := b.cLit_lit[i]
 	//   b.Lookup[(lit-1)/b.Size2] = 1 + (lit-1)%b.Size2
 	// }
-	for i, m := range model {
-		if !m {
+	for i := 0; i < min(len(model), len(b.cLit_lit)-1); i++ {
+		if !model[i] {
 			continue
-		}
-		if i > len(b.Candidates) {
-			break
 		}
 		lit := b.cLit_lit[i+1]
 		// log.Println(i+1, lit, (lit-1)/b.Size2, 1+(lit-1)%b.Size2)
 		b.Lookup[(lit-1)/b.Size2] = 1 + (lit-1)%b.Size2
 	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // 1-indexed

@@ -58,6 +58,30 @@ func NewFromSingleRowString(input string) *Board {
 	return board
 }
 
+func (b *Board) ReplaceWithSingleRowString(input string, skipCandidateElimination bool) {
+	size2 := 9
+	candidates := make([]bool, size2*size2*size2+1)
+	b.Lookup = make([]int, size2*size2)
+	b.NumCandidates = len(candidates) - 1
+
+	if !skipCandidateElimination {
+		for i := 1; i < len(candidates); i++ {
+			candidates[i] = true
+		}
+		b.Candidates = candidates
+	}
+
+	for i, c := range input {
+		if c != '0' && c != '.' {
+			if skipCandidateElimination {
+				b.Lookup[b.Idx(i/size2, i%size2)] = int(c - '0')
+			} else {
+				b.SetValue(i/size2, i%size2, int(c-'0'), true)
+			}
+		}
+	}
+}
+
 func NewFromArray(cells [][]int) *Board {
 	size2 := len(cells)
 	size := getSize(size2)
@@ -77,17 +101,14 @@ func NewFromArray(cells [][]int) *Board {
 
 func (s *Board) Print(w io.Writer) {
 	charLen := int(math.Floor(math.Log10(float64(s.Size2 * s.Size2))))
-	formatter := fmt.Sprintf("%%%dd", charLen)
+	formatter := fmt.Sprintf("%%s%%%dd%%s", charLen)
 
 	for r := 0; r < s.Size2; r++ {
-		for c := 0; c < s.Size2; c++ {
-			if c != 0 {
-				fmt.Fprint(w, " ")
-			}
-
-			fmt.Fprintf(w, formatter, s.Lookup[s.Idx(r, c)])
+		fmt.Fprintf(w, formatter, "", s.Lookup[s.Idx(r, 0)], "")
+		for c := 1; c < s.Size2-1; c++ {
+			fmt.Fprintf(w, formatter, " ", s.Lookup[s.Idx(r, c)], "")
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintf(w, formatter, " ", s.Lookup[s.Idx(r, s.Size2-1)], "\n")
 	}
 }
 

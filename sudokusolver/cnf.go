@@ -19,6 +19,7 @@ type CNFInterface interface {
 	getBoard() *sudoku.Board
 	getLits() []int
 	getClauses() [][]int
+	clauseLen() int
 	Simplify(SimplifyOptions)
 	Print(w io.Writer)
 }
@@ -41,6 +42,10 @@ const (
 )
 
 type CNFBuilder = func(c CNFInterface, lits []int) [][]int
+
+func (c *CNF) clauseLen() int {
+	return len(c.Clauses)
+}
 
 func (c *CNF) addLit(lit int) {
 	c.lits = append(c.lits, lit)

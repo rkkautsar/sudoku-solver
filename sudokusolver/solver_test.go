@@ -122,14 +122,14 @@ func BenchmarkSolve144x144(b *testing.B) {
 	}
 }
 
-// func BenchmarkSolve225x225(b *testing.B) {
-// 	bytes, _ := ioutil.ReadFile("../data/sudoku-225-1.txt")
-// 	input := string(bytes)
-// 	b.ResetTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		solveOneLiner(input)
-// 	}
-// }
+func BenchmarkSolve225x225(b *testing.B) {
+	bytes, _ := ioutil.ReadFile("../data/sudoku-225-2.txt")
+	input := string(bytes)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		solveOneLiner(input)
+	}
+}
 
 func BenchmarkSolveWithCadicalAiEscargot(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -167,14 +167,14 @@ func BenchmarkSolveWithCadical64x64(b *testing.B) {
 	}
 }
 
-func BenchmarkSolveWithCadical64x64Hard(b *testing.B) {
-	bytes, _ := ioutil.ReadFile("../data/sudoku-64-1.txt")
-	input := string(bytes)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		customSolveOneLiner(input, CUSTOM_SOLVER)
-	}
-}
+// func BenchmarkSolveWithCadical64x64Hard(b *testing.B) {
+// 	bytes, _ := ioutil.ReadFile("../data/sudoku-64-1.txt")
+// 	input := string(bytes)
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		customSolveOneLiner(input, CUSTOM_SOLVER)
+// 	}
+// }
 
 func BenchmarkSolveWithCadical81x81(b *testing.B) {
 	bytes, _ := ioutil.ReadFile("../data/sudoku-81-1.txt")
@@ -203,14 +203,14 @@ func BenchmarkSolveWithCadical144x144(b *testing.B) {
 	}
 }
 
-// func BenchmarkSolveWithCadical225x225(b *testing.B) {
-// 	bytes, _ := ioutil.ReadFile("../data/sudoku-225-1.txt")
-// 	input := string(bytes)
-// 	b.ResetTimer()
-// 	for i := 0; i < b.N; i++ {
-// 		customSolveOneLiner(input, CUSTOM_SOLVER)
-// 	}
-// }
+func BenchmarkSolveWithCadical225x225(b *testing.B) {
+	bytes, _ := ioutil.ReadFile("../data/sudoku-225-2.txt")
+	input := string(bytes)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		customSolveOneLiner(input, CUSTOM_SOLVER)
+	}
+}
 
 func BenchmarkSolveManyHardest110626(b *testing.B) {
 	for i := 0; i < b.N; i++ {
