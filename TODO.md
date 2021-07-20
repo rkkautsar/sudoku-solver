@@ -1,0 +1,4 @@
+- [ ] Triad encoding (refer to [tdoku](https://t-dillon.github.io/tdoku/))
+  - Need lit compression?
+  - Can implement like candidates?
+- [ ] Implement own SAT solver?

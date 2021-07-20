@@ -157,59 +157,60 @@ func SolveManyGophersat(in io.Reader, out io.Writer) {
 func SolveManyGini(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	writer := bufio.NewWriter(out)
-	base := GetBase9x9Clauses()
-	g := gini.New()
+	// base := GetBase9x9Clauses()
+	// g := gini.New()
 	// log.Println("new")
-	giniAddConstraints(g, base.getClauses())
+	// giniAddConstraints(g, base.getClauses())
 	// log.Println("constraints")
-	board := base.Board
+	// board := base.Board
 
 	// giniSolve(g, board)
-	// board := sudoku.New(3)
+	board := sudoku.New(3)
 
-	actLits := make([]z.Lit, 0, 81)
+	// actLits := make([]z.Lit, 0, 81)
 
 	for scanner.Scan() {
 		// log.Println("start")
 		input := scanner.Text()
 		board.ReplaceWithSingleRowString(input, true)
-		board.NumCandidates = 729
-		// SolveWithGini(board)
-		// cnf := &CNF{Board: board, nbVar: base.nbVar}
-		actLits = actLits[:0]
-		for i := 1; i <= 729; i++ {
-			if board.Lookup[(i-1)/9] == ((i-1)%9)+1 {
-				// log.Println("new:", i)
-				g.Add(z.Dimacs2Lit(i))
-				m := g.Activate()
-				// fmt.Println("activation", i, m.Dimacs())
-				actLits = append(actLits, m)
-			}
-			// else if !board.Candidates[i] {
-			// 	// log.Println("new:", -i)
-			// 	g.Add(z.Dimacs2Lit(-i))
-			// 	m := g.Activate()
-			// 	actLits = append(actLits, m)
-			// 	// fmt.Println("activation", -i, m.Dimacs())
-			// }
-		}
-		// log.Println("assume")
-		// log.Println(actLits)
-		g.Assume(actLits...)
-		giniSolve(g, board)
-		// log.Println("solve")
-		board.PrintOneLine(writer)
-		for _, m := range actLits {
-			g.Deactivate(m)
-		}
+		// board.BasicSolve()
+		// board.NumCandidates = 729
+		// // SolveWithGini(board)
+		// // cnf := &CNF{Board: board, nbVar: base.nbVar}
+		// actLits = actLits[:0]
+		// for i := 1; i <= 729; i++ {
+		// 	if board.Lookup[(i-1)/9] == ((i-1)%9)+1 {
+		// 		// log.Println("new:", i)
+		// 		g.Add(z.Dimacs2Lit(i))
+		// 		m := g.Activate()
+		// 		// fmt.Println("activation", i, m.Dimacs())
+		// 		actLits = append(actLits, m)
+		// 	}
+		// 	// else if !board.Candidates[i] {
+		// 	// 	// log.Println("new:", -i)
+		// 	// 	g.Add(z.Dimacs2Lit(-i))
+		// 	// 	m := g.Activate()
+		// 	// 	actLits = append(actLits, m)
+		// 	// 	// fmt.Println("activation", -i, m.Dimacs())
+		// 	// }
+		// }
+		// // log.Println("assume")
+		// // log.Println(actLits)
+		// g.Assume(actLits...)
+		// giniSolve(g, board)
+		// // log.Println("solve")
+		// board.PrintOneLine(writer)
+		// for _, m := range actLits {
+		// 	g.Deactivate(m)
+		// }
 		// log.Println("end")
 
-		// g := gini.New()
-		// board.ReplaceWithSingleRowString(input, false)
-		// cnf := GenerateCNFConstraints(board)
-		// giniAddConstraints(g, cnf.getClauses())
-		// giniSolve(g, board)
-		// board.PrintOneLine(writer)
+		g := gini.New()
+		board.ReplaceWithSingleRowString(input, false)
+		cnf := GenerateCNFConstraints(board)
+		giniAddConstraints(g, cnf.getClauses())
+		giniSolve(g, board)
+		board.PrintOneLine(writer)
 	}
 	writer.Flush()
 }

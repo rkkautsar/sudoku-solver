@@ -7,6 +7,7 @@ import (
 func GenerateCNFConstraints(s *sudoku.Board) CNFInterface {
 	var cnf CNFInterface
 
+	s.BasicSolve()
 	s.InitCompressedLits()
 
 	shouldUseParallel := false
