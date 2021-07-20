@@ -46,7 +46,7 @@ func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
 }
 
 func cnfExactly1(c CNFInterface, lits []int) [][]int {
-	if len(lits) <= 1 {
+	if len(lits) == 1 {
 		c.addLit(lits[0])
 		return [][]int{}
 	}

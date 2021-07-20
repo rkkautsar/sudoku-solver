@@ -18,12 +18,14 @@ import (
 )
 
 func SolveWithGophersat(board *sudoku.Board) {
+	board.BasicSolve()
 	cnf := GenerateCNFConstraints(board)
 	pb := solver.ParseSlice(cnf.getClauses())
 	solvePbWithGophersat(board, pb)
 }
 
 func SolveWithGini(board *sudoku.Board) {
+	board.BasicSolve()
 	g := gini.New()
 	cnf := GenerateCNFConstraints(board)
 	giniAddConstraints(g, cnf.getClauses())
@@ -80,6 +82,7 @@ func SolveWithCustomSolver(board *sudoku.Board, solver string) {
 
 	cmd.Start()
 	defer cmd.Wait()
+	board.BasicSolve()
 	cnf := GenerateCNFConstraints(board)
 	cnf.Print(writer)
 	writer.Flush()
@@ -148,6 +151,7 @@ func SolveManyGophersat(in io.Reader, out io.Writer) {
 	for scanner.Scan() {
 		input := scanner.Text()
 		board.ReplaceWithSingleRowString(input, false)
+		board.BasicSolve()
 		SolveWithGophersatAndBase(board, base)
 		board.PrintOneLine(writer)
 	}
@@ -157,27 +161,39 @@ func SolveManyGophersat(in io.Reader, out io.Writer) {
 func SolveManyGini(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	writer := bufio.NewWriter(out)
-	// base := GetBase9x9Clauses()
-	// g := gini.New()
+	base := GetBase9x9Clauses()
+	g := gini.New()
 	// log.Println("new")
-	// giniAddConstraints(g, base.getClauses())
+	giniAddConstraints(g, base.getClauses())
 	// log.Println("constraints")
-	// board := base.Board
+	board := base.Board
 
 	// giniSolve(g, board)
-	board := sudoku.New(3)
+	// board := sudoku.New(3)
 
 	// actLits := make([]z.Lit, 0, 81)
 
 	for scanner.Scan() {
 		// log.Println("start")
 		input := scanner.Text()
-		board.ReplaceWithSingleRowString(input, true)
+		// board.ReplaceWithSingleRowString(input, true)
 		// board.BasicSolve()
 		// board.NumCandidates = 729
 		// // SolveWithGini(board)
 		// // cnf := &CNF{Board: board, nbVar: base.nbVar}
 		// actLits = actLits[:0]
+		// for r := 0; r < 9; r++ {
+		// 	for c := 0; c < 9; c++ {
+		// 		for v := 1; v <= 9; v++ {
+		// 			if board.Lookup[board.Idx(r, c)] == v {
+		// 				g.Add(z.Dimacs2Lit(board.Lit(r, c, v)))
+		// 				m := g.Activate()
+		// 				// fmt.Println("activation", i, m.Dimacs())
+		// 				actLits = append(actLits, m)
+		// 			}
+		// 		}
+		// 	}
+		// }
 		// for i := 1; i <= 729; i++ {
 		// 	if board.Lookup[(i-1)/9] == ((i-1)%9)+1 {
 		// 		// log.Println("new:", i)
@@ -194,8 +210,8 @@ func SolveManyGini(in io.Reader, out io.Writer) {
 		// 	// 	// fmt.Println("activation", -i, m.Dimacs())
 		// 	// }
 		// }
-		// // log.Println("assume")
-		// // log.Println(actLits)
+		// log.Println("assume")
+		// log.Println(actLits)
 		// g.Assume(actLits...)
 		// giniSolve(g, board)
 		// // log.Println("solve")
@@ -207,6 +223,7 @@ func SolveManyGini(in io.Reader, out io.Writer) {
 
 		g := gini.New()
 		board.ReplaceWithSingleRowString(input, false)
+		board.BasicSolve()
 		cnf := GenerateCNFConstraints(board)
 		giniAddConstraints(g, cnf.getClauses())
 		giniSolve(g, board)

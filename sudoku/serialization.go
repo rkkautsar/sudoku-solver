@@ -60,15 +60,16 @@ func NewFromSingleRowString(input string) *Board {
 
 func (b *Board) ReplaceWithSingleRowString(input string, skipCandidateElimination bool) {
 	size2 := 9
-	candidates := make([]bool, size2*size2*size2+1)
-	b.Lookup = make([]int, size2*size2)
-	b.NumCandidates = len(candidates) - 1
+	b.NumCandidates = len(b.Candidates) - 1
+
+	for i := 0; i < len(b.Lookup); i++ {
+		b.Lookup[i] = 0
+	}
 
 	if !skipCandidateElimination {
-		for i := 1; i < len(candidates); i++ {
-			candidates[i] = true
+		for i := 1; i < len(b.Candidates); i++ {
+			b.Candidates[i] = true
 		}
-		b.Candidates = candidates
 	}
 
 	for i, c := range input {

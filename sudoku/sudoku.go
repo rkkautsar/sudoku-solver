@@ -59,10 +59,15 @@ func (b *Board) SetValue(row, col, val int, truth bool) {
 		if i != col {
 			b.SetValue(row, i, val, false)
 		}
-		blkR := blkRStart + i/b.Size
-		blkC := blkCStart + i%b.Size
-		if blkR != row && blkC != col {
-			b.SetValue(blkR, blkC, val, false)
+	}
+
+	for r := 0; r < b.Size; r++ {
+		for c := 0; c < b.Size; c++ {
+			blkR := blkRStart + r
+			blkC := blkCStart + c
+			if blkR != row && blkC != col {
+				b.SetValue(blkR, blkC, val, false)
+			}
 		}
 	}
 }
@@ -108,47 +113,56 @@ func (b *Board) NakedSingles() bool {
 func (b *Board) HiddenSingles() bool {
 	restart := false
 	for v := 1; v <= b.Size2; v++ {
+		var blkRStart, blkCStart int
 		for i := 0; i < b.Size2; i++ {
 			var (
 				count [3]int
-				last  [3]int
+				last  [4]int
 			)
-			blkRStart := (i / b.Size) * b.Size
-			blkCStart := (i % b.Size) * b.Size
 
 			for j := 0; j < b.Size2; j++ {
 				// row
-				if b.Candidates[b.Lit(i, j, v)] && b.Lookup[b.Idx(i, j)] != v {
+				if b.Candidates[b.Lit(i, j, v)] {
 					count[0] += 1
 					last[0] = j
 				}
 				// col
-				if b.Candidates[b.Lit(j, i, v)] && b.Lookup[b.Idx(j, i)] != v {
+				if b.Candidates[b.Lit(j, i, v)] {
 					count[1] += 1
 					last[1] = j
 				}
-				// block
-				blkR := blkRStart + j/b.Size
-				blkC := blkCStart + j%b.Size
-				if b.Candidates[b.Lit(blkR, blkC, v)] && b.Lookup[b.Idx(blkR, blkC)] != v {
-					count[2] += 1
-					last[2] = j
+			}
+
+			for r := 0; r < b.Size; r++ {
+				for c := 0; c < b.Size; c++ {
+					// block
+					blkR := blkRStart*b.Size + r
+					blkC := blkCStart*b.Size + c
+					if b.Candidates[b.Lit(blkR, blkC, v)] {
+						count[2] += 1
+						last[2] = blkR
+						last[3] = blkC
+					}
 				}
 			}
 
-			if count[0] == 1 {
+			if count[0] == 1 && b.Lookup[b.Idx(i, last[0])] != v {
 				b.SetValue(i, last[0], v, true)
 				restart = true
 			}
-			if count[1] == 1 {
+			if count[1] == 1 && b.Lookup[b.Idx(last[1], i)] != v {
 				b.SetValue(last[1], i, v, true)
 				restart = true
 			}
-			if count[2] == 1 {
-				blkR := blkRStart + last[2]/b.Size
-				blkC := blkCStart + last[2]%b.Size
-				b.SetValue(blkR, blkC, v, true)
+			if count[2] == 1 && b.Lookup[b.Idx(last[2], last[3])] != v {
+				b.SetValue(last[2], last[3], v, true)
 				restart = true
+			}
+
+			blkCStart += 1
+			if blkCStart%b.Size == 0 {
+				blkRStart += 1
+				blkCStart = 0
 			}
 		}
 	}
@@ -169,6 +183,10 @@ func (b *Board) InitCompressedLits() {
 		j++
 	}
 }
+
+// func (b *Board) InitTriads() {
+
+// }
 
 // from model of compressed lits
 func (b *Board) SolveWithModel(model []bool) {
@@ -210,6 +228,20 @@ func (b *Board) CLit(row, col, val int) int {
 func (b *Board) Idx(row, col int) int {
 	return row*b.Size2 + col
 }
+
+// func (b *Board) RowTriadLit(row, col, val int) int {
+// 	return b.Size2*b.Size2*b.Size2 + b.TriadIdx(row, col, val)
+// }
+
+// func (b *Board) ColTriadLit(row, col, val int) int {
+// 	return b.Size2*b.Size2*b.Size2 + b.Size2*b.Size*b.Size2 + b.TriadIdx(col, row, val)
+// }
+
+// // crossAxis = row for RowTriad
+// //           = col for ColTriad
+// func (b *Board) TriadIdx(mainAxis, crossAxis, value int) int {
+// 	return mainAxis*b.Size2*b.Size + (crossAxis/b.Size)*b.Size + (value - 1)
+// }
 
 func getSize(size2 int) int {
 	size := int(math.Sqrt(float64(size2)))
