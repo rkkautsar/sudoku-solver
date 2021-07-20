@@ -51,7 +51,7 @@ func NewFromSingleRowString(input string) *Board {
 
 	for i, c := range input {
 		if c != '0' && c != '.' {
-			board.SetValue(i/size2, i%size2, int(c-'0'), true)
+			board.SetValue(i/size2, i%size2, int(c-'0'))
 		}
 	}
 
@@ -70,6 +70,11 @@ func (b *Board) ReplaceWithSingleRowString(input string, skipCandidateEliminatio
 		for i := 1; i < len(b.Candidates); i++ {
 			b.Candidates[i] = true
 		}
+		for i := 0; i < len(b.rowCandidateCount); i++ {
+			b.rowCandidateCount[i] = size2
+			b.colCandidateCount[i] = size2
+			b.blkCandidateCount[i] = size2
+		}
 	}
 
 	for i, c := range input {
@@ -77,7 +82,7 @@ func (b *Board) ReplaceWithSingleRowString(input string, skipCandidateEliminatio
 			if skipCandidateElimination {
 				b.Lookup[b.Idx(i/size2, i%size2)] = int(c - '0')
 			} else {
-				b.SetValue(i/size2, i%size2, int(c-'0'), true)
+				b.SetValue(i/size2, i%size2, int(c-'0'))
 			}
 		}
 	}
@@ -93,7 +98,7 @@ func NewFromArray(cells [][]int) *Board {
 			if val < 1 || val > size2 {
 				continue
 			}
-			board.SetValue(r, c, val, true)
+			board.SetValue(r, c, val)
 		}
 	}
 

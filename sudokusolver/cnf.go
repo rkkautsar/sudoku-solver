@@ -110,8 +110,8 @@ func (c *CNF) getLits() []int {
 
 func (c *CNF) getClauses() [][]int {
 	clauses := make([][]int, 0, len(c.Clauses)+len(c.lits))
-	for _, l := range c.lits {
-		clauses = append(clauses, []int{l})
+	for i := 0; i < len(c.lits); i++ {
+		clauses = append(clauses, c.lits[i:i+1])
 	}
 	clauses = append(clauses, c.Clauses...)
 	return clauses

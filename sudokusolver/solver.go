@@ -161,22 +161,22 @@ func SolveManyGophersat(in io.Reader, out io.Writer) {
 func SolveManyGini(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	writer := bufio.NewWriter(out)
-	base := GetBase9x9Clauses()
-	g := gini.New()
+	// base := GetBase9x9Clauses()
+	// g := gini.New()
 	// log.Println("new")
-	giniAddConstraints(g, base.getClauses())
+	// giniAddConstraints(g, base.getClauses())
 	// log.Println("constraints")
-	board := base.Board
+	// board := base.Board
 
 	// giniSolve(g, board)
-	// board := sudoku.New(3)
+	board := sudoku.New(3)
 
 	// actLits := make([]z.Lit, 0, 81)
 
 	for scanner.Scan() {
 		// log.Println("start")
 		input := scanner.Text()
-		// board.ReplaceWithSingleRowString(input, true)
+		board.ReplaceWithSingleRowString(input, true)
 		// board.BasicSolve()
 		// board.NumCandidates = 729
 		// // SolveWithGini(board)
@@ -221,12 +221,8 @@ func SolveManyGini(in io.Reader, out io.Writer) {
 		// }
 		// log.Println("end")
 
-		g := gini.New()
 		board.ReplaceWithSingleRowString(input, false)
-		board.BasicSolve()
-		cnf := GenerateCNFConstraints(board)
-		giniAddConstraints(g, cnf.getClauses())
-		giniSolve(g, board)
+		SolveWithGini(board)
 		board.PrintOneLine(writer)
 	}
 	writer.Flush()
@@ -244,7 +240,7 @@ func SolveWithGophersatAndBase(board *sudoku.Board, base *CNF) {
 
 	cnf := &CNF{Board: board, Clauses: clauses, nbVar: base.nbVar}
 	cnf.lits = append(cnf.lits, base.lits...)
-	cnf.Simplify(SimplifyOptions{disablePureLiteralElimination: false})
+	// cnf.Simplify(SimplifyOptions{disablePureLiteralElimination: false})
 	pb := solver.ParseSlice(cnf.Clauses)
 	solvePbWithGophersat(board, pb)
 }

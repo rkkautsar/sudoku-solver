@@ -37,11 +37,14 @@ func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
 
 	filteredLits := lits
 
-	if pairwise || len(filteredLits) < 6 {
+	if pairwise || len(filteredLits) <= 5 {
 		return cnfAtMost1Pairwise(c, filteredLits)
 	}
 
+	// if len(filteredLits) <= 10 {
 	return cnfAtMost1Commander(c, filteredLits)
+	// }
+
 	// return cnfAtMost1Bimander(c, filteredLits)
 }
 

@@ -10,21 +10,48 @@ type Board struct {
 	Candidates []bool // lit
 	Lookup     []int  // idx
 
-	NumCandidates int
-	lit_cLit      []int // lit -> compressed lit, 1-indexed
-	cLit_lit      []int // compressed lit -> lit, 1-indexed
+	NumCandidates     int
+	rowCandidateCount []int
+	colCandidateCount []int
+	blkCandidateCount []int
+	blkIdxMap         []int // idx -> blkIdx
+
+	lit_cLit []int // lit -> compressed lit, 1-indexed
+	cLit_lit []int // compressed lit -> lit, 1-indexed
 }
 
 func New(size int) *Board {
 	size2 := size * size
 	candidates := make([]bool, size2*size2*size2+1)
+	rowCandidateCount := make([]int, size2*size2)
+	colCandidateCount := make([]int, size2*size2)
+	blkCandidateCount := make([]int, size2*size2)
+	blkIdxMap := make([]int, size2*size2)
+
 	board := &Board{
 		Size:       size,
 		Size2:      size2,
 		Lookup:     make([]int, size2*size2),
+		blkIdxMap:  blkIdxMap,
 		Candidates: candidates,
 
+		rowCandidateCount: rowCandidateCount,
+		colCandidateCount: colCandidateCount,
+		blkCandidateCount: blkCandidateCount,
+
 		NumCandidates: len(candidates) - 1,
+	}
+
+	for r := 0; r < size2; r++ {
+		for c := 0; c < size2; c++ {
+			blkIdxMap[r*size2+c] = r/size*size + c/size
+		}
+	}
+
+	for i := 0; i < len(rowCandidateCount); i++ {
+		rowCandidateCount[i] = size2
+		colCandidateCount[i] = size2
+		blkCandidateCount[i] = size2
 	}
 
 	for i := 1; i < len(candidates); i++ {
@@ -34,30 +61,25 @@ func New(size int) *Board {
 	return board
 }
 
-func (b *Board) SetValue(row, col, val int, truth bool) {
-	if !truth {
-		lit := b.Lit(row, col, val)
-		prev := b.Candidates[lit]
-		b.Candidates[lit] = false
-		if prev {
-			b.NumCandidates--
-		}
-		return
-	}
+func (b *Board) SetValue(row, col, val int) {
+	blkIndex := b.blkIdxMap[b.Idx(row, col)]
 
 	b.Lookup[b.Idx(row, col)] = val
+	b.rowCandidateCount[row*b.Size2+val-1] = 1
+	b.colCandidateCount[col*b.Size2+val-1] = 1
+	b.blkCandidateCount[blkIndex*b.Size2+val-1] = 1
 	blkRStart := b.Size * (row / b.Size)
 	blkCStart := b.Size * (col / b.Size)
 
 	for i := 0; i < b.Size2; i++ {
 		if i+1 != val {
-			b.SetValue(row, col, i+1, false)
+			b.SetValueFalse(row, col, i+1)
 		}
 		if i != row {
-			b.SetValue(i, col, val, false)
+			b.SetValueFalse(i, col, val)
 		}
 		if i != col {
-			b.SetValue(row, i, val, false)
+			b.SetValueFalse(row, i, val)
 		}
 	}
 
@@ -66,9 +88,22 @@ func (b *Board) SetValue(row, col, val int, truth bool) {
 			blkR := blkRStart + r
 			blkC := blkCStart + c
 			if blkR != row && blkC != col {
-				b.SetValue(blkR, blkC, val, false)
+				b.SetValueFalse(blkR, blkC, val)
 			}
 		}
+	}
+}
+
+func (b *Board) SetValueFalse(row, col, val int) {
+	blkIndex := b.blkIdxMap[b.Idx(row, col)]
+	lit := b.Lit(row, col, val)
+	prev := b.Candidates[lit]
+	b.Candidates[lit] = false
+	if prev {
+		b.NumCandidates--
+		b.rowCandidateCount[row*b.Size2+val-1] -= 1
+		b.colCandidateCount[col*b.Size2+val-1] -= 1
+		b.blkCandidateCount[blkIndex*b.Size2+val-1] -= 1
 	}
 }
 
@@ -102,7 +137,7 @@ func (b *Board) NakedSingles() bool {
 				last = v
 			}
 			if last != 0 {
-				b.SetValue(r, c, last, true)
+				b.SetValue(r, c, last)
 				restart = true
 			}
 		}
@@ -112,57 +147,47 @@ func (b *Board) NakedSingles() bool {
 
 func (b *Board) HiddenSingles() bool {
 	restart := false
-	for v := 1; v <= b.Size2; v++ {
-		var blkRStart, blkCStart int
-		for i := 0; i < b.Size2; i++ {
-			var (
-				count [3]int
-				last  [4]int
-			)
-
-			for j := 0; j < b.Size2; j++ {
-				// row
-				if b.Candidates[b.Lit(i, j, v)] {
-					count[0] += 1
-					last[0] = j
-				}
-				// col
-				if b.Candidates[b.Lit(j, i, v)] {
-					count[1] += 1
-					last[1] = j
-				}
-			}
-
-			for r := 0; r < b.Size; r++ {
-				for c := 0; c < b.Size; c++ {
-					// block
-					blkR := blkRStart*b.Size + r
-					blkC := blkCStart*b.Size + c
-					if b.Candidates[b.Lit(blkR, blkC, v)] {
-						count[2] += 1
-						last[2] = blkR
-						last[3] = blkC
+	for i := 0; i < b.Size2; i++ {
+		for v := 1; v <= b.Size2; v++ {
+			if b.rowCandidateCount[i*b.Size2+v-1] == 1 {
+				for j := 0; j < b.Size2; j++ {
+					if b.Candidates[b.Lit(i, j, v)] {
+						if b.Lookup[b.Idx(i, j)] != v {
+							b.SetValue(i, j, v)
+							restart = true
+						}
+						break
 					}
 				}
 			}
-
-			if count[0] == 1 && b.Lookup[b.Idx(i, last[0])] != v {
-				b.SetValue(i, last[0], v, true)
-				restart = true
+			if b.colCandidateCount[i*b.Size2+v-1] == 1 {
+				for j := 0; j < b.Size2; j++ {
+					if b.Candidates[b.Lit(j, i, v)] {
+						if b.Lookup[b.Idx(j, i)] != v {
+							b.SetValue(j, i, v)
+							restart = true
+						}
+						break
+					}
+				}
 			}
-			if count[1] == 1 && b.Lookup[b.Idx(last[1], i)] != v {
-				b.SetValue(last[1], i, v, true)
-				restart = true
-			}
-			if count[2] == 1 && b.Lookup[b.Idx(last[2], last[3])] != v {
-				b.SetValue(last[2], last[3], v, true)
-				restart = true
-			}
-
-			blkCStart += 1
-			if blkCStart%b.Size == 0 {
-				blkRStart += 1
-				blkCStart = 0
+			if b.blkCandidateCount[i*b.Size2+v-1] == 1 {
+				blkRStart := (i / b.Size) * b.Size
+				blkCStart := (i % b.Size) * b.Size
+				for r := 0; r < b.Size; r++ {
+					for c := 0; c < b.Size; c++ {
+						// block
+						blkR := blkRStart + r
+						blkC := blkCStart + c
+						if b.Candidates[b.Lit(blkR, blkC, v)] {
+							if b.Lookup[b.Idx(blkR, blkC)] != v {
+								b.SetValue(blkR, blkC, v)
+								restart = true
+							}
+							break
+						}
+					}
+				}
 			}
 		}
 	}
