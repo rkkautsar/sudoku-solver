@@ -1,12 +1,6 @@
 package sudokusolver
 
 func cnfAtLeast1(c CNFInterface, lits []int) [][]int {
-	// for _, lit := range lits {
-	// 	if exists := c.lookupTrue(lit); exists {
-	// 		return [][]int{}
-	// 	}
-	// }
-
 	return [][]int{lits}
 }
 
@@ -15,37 +9,15 @@ func cnfAtMost1(c CNFInterface, lits []int) [][]int {
 }
 
 func _cnfAtMost1(c CNFInterface, lits []int, pairwise bool) [][]int {
-	// filteredLits := make([]int, 0, len(lits))
-	// satisfyingLit := 0
-	// for _, lit := range lits {
-	// 	if !c.lookupTrue(-lit) {
-	// 		filteredLits = append(filteredLits, lit)
-	// 	} else if c.lookupTrue(lit) {
-	// 		satisfyingLit = lit
-	// 	}
-	// }
-
-	// if satisfyingLit != 0 {
-	// 	for _, lit := range lits {
-	// 		if satisfyingLit == lit || c.lookupTrue(-lit) {
-	// 			continue
-	// 		}
-	// 		c.addLit(-lit)
-	// 	}
-	// 	return [][]int{}
-	// }
-
-	filteredLits := lits
-
-	if pairwise || len(filteredLits) <= 5 {
-		return cnfAtMost1Pairwise(c, filteredLits)
+	if pairwise || len(lits) <= 5 {
+		return cnfAtMost1Pairwise(c, lits)
 	}
 
-	// if len(filteredLits) <= 10 {
-	return cnfAtMost1Commander(c, filteredLits)
-	// }
+	if len(lits) <= 10 {
+		return cnfAtMost1Commander(c, lits)
+	}
 
-	// return cnfAtMost1Bimander(c, filteredLits)
+	return cnfAtMost1Bimander(c, lits)
 }
 
 func cnfExactly1(c CNFInterface, lits []int) [][]int {
