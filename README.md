@@ -64,6 +64,14 @@ ok  	github.com/rkkautsar/sudoku-solver/sudokusolver	57.400s
 
 ### Installing
 
+#### From gobinaries
+
+```sh
+curl -sf https://gobinaries.com/rkkautsar/sudoku-solver/cmd/sudokusolver | sh
+```
+
+#### From source
+
 ```sh
 go get github.com/rkkautsar/sudoku-solver/cmd/sudokusolver
 ```
@@ -77,7 +85,7 @@ sudokusolver -solve < data/sudoku-9-1.txt
 sudokusolver -solve -many < data/sudoku.many.17clue.txt
 
 # brew install cadical
-sudokusilver -solver "cadical -q" < data/sudoku-9-1.txt
+sudokusolver -solver "cadical -q" < data/sudoku-9-1.txt
 ```
 
 ## License
