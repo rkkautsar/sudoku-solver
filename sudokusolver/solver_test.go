@@ -2,6 +2,10 @@ package sudokusolver_test
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -49,6 +53,14 @@ func TestSolveHard17clue(t *testing.T) {
 	solution := solveOneLiner(hard17clue[0])
 	assert.Equal(t, hard17clue[1], solution)
 }
+
+func TestMany17clue(t *testing.T) {
+	h := md5.New()
+	fmt.Fprintln(h, 49151)
+	solveManyWithGini("../data/sudoku.many.17clue.txt", h)
+	assert.Equal(t, "41704fd7d8fd0723a45ffbb2dbbfa488", hex.EncodeToString(h.Sum(nil)))
+}
+
 func BenchmarkSolveAiEscargot(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		solveOneLiner(aiEscargot[0])
@@ -248,15 +260,10 @@ func customSolveOneLiner(input, solver string) string {
 }
 
 func solveMany(inputFile string) {
-	solveManyWithGini(inputFile)
+	solveManyWithGini(inputFile, nil)
 }
 
-func solveManyWithGophersat(inputFile string) {
+func solveManyWithGini(inputFile string, output io.Writer) {
 	file, _ := os.Open(inputFile)
-	sudokusolver.SolveManyGophersat(file, ioutil.Discard)
-}
-
-func solveManyWithGini(inputFile string) {
-	file, _ := os.Open(inputFile)
-	sudokusolver.SolveManyGini(file, ioutil.Discard)
+	sudokusolver.SolveManyGini(file, output)
 }

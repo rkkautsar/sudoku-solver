@@ -143,6 +143,10 @@ func ExplainUnsat(pb *solver.Problem) {
 
 // only support gophersat since otherwise it has the overhead of spawning subproc
 func SolveManyGophersat(in io.Reader, out io.Writer) {
+	if out == nil {
+		out = io.Discard
+	}
+
 	scanner := bufio.NewScanner(in)
 	writer := bufio.NewWriter(out)
 	base := GetBase9x9Clauses()
@@ -159,6 +163,14 @@ func SolveManyGophersat(in io.Reader, out io.Writer) {
 }
 
 func SolveManyGini(in io.Reader, out io.Writer) {
+	shouldPrintPuzzle := false
+
+	if out == nil {
+		out = io.Discard
+	} else {
+		shouldPrintPuzzle = true
+	}
+
 	scanner := bufio.NewScanner(in)
 	writer := bufio.NewWriter(out)
 	// base := GetBase9x9Clauses()
@@ -176,6 +188,9 @@ func SolveManyGini(in io.Reader, out io.Writer) {
 	for scanner.Scan() {
 		// log.Println("start")
 		input := scanner.Text()
+		if shouldPrintPuzzle {
+			writer.WriteString(input + ",")
+		}
 		board.ReplaceWithSingleRowString(input, true)
 		// board.BasicSolve()
 		// board.NumCandidates = 729
