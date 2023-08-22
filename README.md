@@ -13,47 +13,48 @@ Featuring:
 - has built-in SAT solver (gini) or can use custom SAT solver
 - bimander encoding for at-most-one
 - parallel CNF encoding
-- fast, but not as fast as specialized solvers (0.6ms for ai-escargot, naïve backtracking is around 30ms)
-- pretty fast for larger sudokus (with custom state of the art SAT solver like cadical, 144x144 took 20s, may be better if using parallel SAT solvers)
+- fast, but not as fast as specialized solvers (1ms for ai-escargot, naïve backtracking is around 30ms)
+- pretty fast for larger sudokus, for example a 144x144 sudoku can be solved in 4s
 - pretty simple code
 
 ## Benchmarks
 
-About 17.8s (2761 puzzle/s) to solve the benchmark of [49k 17-clue 9x9 sudoku](data/sudoku.many.17clue.txt) from here: https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
+About 10.7s (4593 puzzle/s) to solve the benchmark of [49k 17-clue 9x9 sudoku](data/sudoku.many.17clue.txt) from here: https://codegolf.stackexchange.com/questions/190727/the-fastest-sudoku-solver
 
 Fastest on this benchmark is [tdoku](https://www.github.com/t-dillon/tdoku) which took 0.2s to complete :rocket:. Other SAT-based solver with minisat took 11.7s.
 
-Other benchmarks on MacBook Pro (15-inch, 2019):
+Other benchmarks available in `make bench`:
 
 ```
 > make bench
 go test -run=XXX -benchmem -bench=. ./sudokusolver
-goos: darwin
+goos: linux
 goarch: amd64
 pkg: github.com/rkkautsar/sudoku-solver/sudokusolver
-BenchmarkSolveAiEscargot-12               	     709	   1666217 ns/op	  493419 B/op	    3500 allocs/op
-BenchmarkSolveHard9x9-12                  	     921	   1286598 ns/op	  603805 B/op	    4001 allocs/op
-BenchmarkSolve17clue9x9-12                	    7153	    163063 ns/op	  184390 B/op	     570 allocs/op
-BenchmarkSolve25x25-12                    	      80	  12950373 ns/op	 8083937 B/op	   56287 allocs/op
-BenchmarkSolve64x64-12                    	       1	1220353582 ns/op	60514968 B/op	  242670 allocs/op
-BenchmarkSolve81x81-12                    	       3	 399683702 ns/op	121419346 B/op	  576312 allocs/op
-BenchmarkSolve100x100-12                  	       5	 206062494 ns/op	165985179 B/op	  422056 allocs/op
-BenchmarkSolve144x144-12                  	       2	 697157792 ns/op	349824684 B/op	   75491 allocs/op
-BenchmarkSolve225x225-12                  	       1	2142547654 ns/op	1351756120 B/op	  191380 allocs/op
-BenchmarkSolveWithCadicalAiEscargot-12    	     104	  10387281 ns/op	  272787 B/op	    4631 allocs/op
-BenchmarkSolveWithCadicalHard9x9-12       	     122	   9572524 ns/op	  308229 B/op	    5674 allocs/op
-BenchmarkSolveWithCadicalHard17clue-12    	     178	   6628977 ns/op	  131383 B/op	     348 allocs/op
-BenchmarkSolveWithCadical25x25-12         	      25	  41032223 ns/op	 4497729 B/op	   78792 allocs/op
-BenchmarkSolveWithCadical64x64-12         	       1	1714517015 ns/op	40885528 B/op	  320000 allocs/op
-BenchmarkSolveWithCadical81x81-12         	       1	1365326700 ns/op	91180048 B/op	  792776 allocs/op
-BenchmarkSolveWithCadical100x100-12       	       3	 412547854 ns/op	137918040 B/op	  609797 allocs/op
-BenchmarkSolveWithCadical144x144-12       	       2	 877587856 ns/op	342151780 B/op	  160161 allocs/op
-BenchmarkSolveWithCadical225x225-12       	       1	2278051818 ns/op	1336688080 B/op	  400567 allocs/op
-BenchmarkSolveManyHardest110626-12        	       2	 837861886 ns/op	228404280 B/op	 1574401 allocs/op
-BenchmarkSolveMany17Clue2k-12             	       2	 704271392 ns/op	590739820 B/op	 3235576 allocs/op
-BenchmarkSolveMany17Clue-12               	       1	17838533350 ns/op	14457925264 B/op	79414142 allocs/op
+cpu: AMD Ryzen 5 3600X 6-Core Processor
+BenchmarkSolveAiEscargot-12                         1215           1023191 ns/op          493599 B/op       3499 allocs/op
+BenchmarkSolveHard9x9-12                            1546            762088 ns/op          595014 B/op       3997 allocs/op
+BenchmarkSolve17clue9x9-12                         13698             85393 ns/op          185647 B/op        568 allocs/op
+BenchmarkSolve25x25-12                               128           9396040 ns/op         8907000 B/op      62807 allocs/op
+BenchmarkSolve64x64-12                                 2         676392630 ns/op        66929668 B/op     296221 allocs/op
+BenchmarkSolve81x81-12                                 3         346799245 ns/op        192092229 B/op    963324 allocs/op
+BenchmarkSolve100x100-12                               7         143129774 ns/op        171782198 B/op    472035 allocs/op
+BenchmarkSolve144x144-12                               3         407516616 ns/op        349730328 B/op     75485 allocs/op
+BenchmarkSolve225x225-12                               1        1156088001 ns/op        1351336632 B/op   191375 allocs/op
+BenchmarkSolveWithCadicalAiEscargot-12               468           2450860 ns/op          265146 B/op       4617 allocs/op
+BenchmarkSolveWithCadicalHard9x9-12                  603           2116695 ns/op          299252 B/op       5659 allocs/op
+BenchmarkSolveWithCadicalHard17clue-12              1292            915425 ns/op          126206 B/op        336 allocs/op
+BenchmarkSolveWithCadical25x25-12                     66          18147812 ns/op         5027100 B/op      92772 allocs/op
+BenchmarkSolveWithCadical64x64-12                      1        1073545781 ns/op        45360520 B/op     440751 allocs/op
+BenchmarkSolveWithCadical81x81-12                      2         590886469 ns/op        123323796 B/op   1693362 allocs/op
+BenchmarkSolveWithCadical100x100-12                    5         232460068 ns/op        141966470 B/op    717556 allocs/op
+BenchmarkSolveWithCadical144x144-12                    3         402889437 ns/op        342061024 B/op    160144 allocs/op
+BenchmarkSolveWithCadical225x225-12                    1        1170865434 ns/op        1336467432 B/op   400554 allocs/op
+BenchmarkSolveManyHardest110626-12                     3         489099958 ns/op        225490930 B/op   1574077 allocs/op
+BenchmarkSolveMany17Clue2k-12                          3         429496144 ns/op        590409965 B/op   3235638 allocs/op
+BenchmarkSolveMany17Clue-12                            1        10773818004 ns/op       14442420704 B/op        79414952 allocs/op
 PASS
-ok  	github.com/rkkautsar/sudoku-solver/sudokusolver	57.400s
+ok      github.com/rkkautsar/sudoku-solver/sudokusolver 48.061s
 ```
 
 ## Getting Started
