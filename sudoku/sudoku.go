@@ -209,25 +209,12 @@ func (b *Board) InitCompressedLits() {
 	}
 }
 
-// func (b *Board) InitTriads() {
-
-// }
-
-// from model of compressed lits
 func (b *Board) SolveWithModel(model []bool) {
-	// for i := 1; i < len(b.Candidates); i++ {
-	//   if !model[i-1] {
-	//     continue
-	//   }
-	//   lit := b.cLit_lit[i]
-	//   b.Lookup[(lit-1)/b.Size2] = 1 + (lit-1)%b.Size2
-	// }
 	for i := 0; i < min(len(model), len(b.cLit_lit)-1); i++ {
 		if !model[i] {
 			continue
 		}
 		lit := b.cLit_lit[i+1]
-		// log.Println(i+1, lit, (lit-1)/b.Size2, 1+(lit-1)%b.Size2)
 		b.Lookup[(lit-1)/b.Size2] = 1 + (lit-1)%b.Size2
 	}
 }
@@ -253,20 +240,6 @@ func (b *Board) CLit(row, col, val int) int {
 func (b *Board) Idx(row, col int) int {
 	return row*b.Size2 + col
 }
-
-// func (b *Board) RowTriadLit(row, col, val int) int {
-// 	return b.Size2*b.Size2*b.Size2 + b.TriadIdx(row, col, val)
-// }
-
-// func (b *Board) ColTriadLit(row, col, val int) int {
-// 	return b.Size2*b.Size2*b.Size2 + b.Size2*b.Size*b.Size2 + b.TriadIdx(col, row, val)
-// }
-
-// // crossAxis = row for RowTriad
-// //           = col for ColTriad
-// func (b *Board) TriadIdx(mainAxis, crossAxis, value int) int {
-// 	return mainAxis*b.Size2*b.Size + (crossAxis/b.Size)*b.Size + (value - 1)
-// }
 
 func getSize(size2 int) int {
 	size := int(math.Sqrt(float64(size2)))

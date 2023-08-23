@@ -66,24 +66,18 @@ func (b *Board) ReplaceWithSingleRowString(input string, skipCandidateEliminatio
 		b.Lookup[i] = 0
 	}
 
-	if !skipCandidateElimination {
-		for i := 1; i < len(b.Candidates); i++ {
-			b.Candidates[i] = true
-		}
-		for i := 0; i < len(b.rowCandidateCount); i++ {
-			b.rowCandidateCount[i] = size2
-			b.colCandidateCount[i] = size2
-			b.blkCandidateCount[i] = size2
-		}
+	for i := 1; i < len(b.Candidates); i++ {
+		b.Candidates[i] = true
+	}
+	for i := 0; i < len(b.rowCandidateCount); i++ {
+		b.rowCandidateCount[i] = size2
+		b.colCandidateCount[i] = size2
+		b.blkCandidateCount[i] = size2
 	}
 
 	for i, c := range input {
 		if c != '0' && c != '.' {
-			if skipCandidateElimination {
-				b.Lookup[b.Idx(i/size2, i%size2)] = int(c - '0')
-			} else {
-				b.SetValue(i/size2, i%size2, int(c-'0'))
-			}
+			b.SetValue(i/size2, i%size2, int(c-'0'))
 		}
 	}
 }

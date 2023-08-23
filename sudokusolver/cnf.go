@@ -1,136 +1,57 @@
 package sudokusolver
 
 import (
-	"fmt"
 	"io"
 
+	"github.com/irifrance/gini"
+	"github.com/irifrance/gini/z"
 	"github.com/rkkautsar/sudoku-solver/sudoku"
 )
 
 type CNFInterface interface {
 	addLit(lit int)
 	addClause(clause []int)
-	addClauses(clauses [][]int)
 	addFormula(lits []int, builder CNFBuilder)
-	initializeLits()
-	lookupTrue(lit int) bool
-	requestLiterals(num int) []int
-	setInitialNbVar(int)
+	requestLiterals(num uint32) []int
 	getBoard() *sudoku.Board
-	getLits() []int
-	getClauses() [][]int
-	clauseLen() int
-	Simplify(SimplifyOptions)
 	Print(w io.Writer)
 }
 
 type CNF struct {
 	CNFInterface
-	Board     *sudoku.Board
-	Clauses   [][]int
-	lits      []int
-	litLookup []uint8
-	watchers  [][]int
-	lookupLen int
-	nbVar     int32
+	g     *gini.Gini
+	Board *sudoku.Board
+	nbVar uint32
 }
 
-const (
-	unassigned = iota
-	assignedTrue
-	assignedFalse
-)
-
-type CNFBuilder = func(c CNFInterface, lits []int) [][]int
-
-func (c *CNF) clauseLen() int {
-	return len(c.Clauses)
-}
+type CNFBuilder = func(c CNFInterface, lits []int)
 
 func (c *CNF) addLit(lit int) {
-	c.lits = append(c.lits, lit)
-	idx := getLitLookupIdx(lit)
-	if idx >= len(c.litLookup) {
-		return
-	}
-
-	if lit < 0 {
-		c.litLookup[idx] = assignedFalse
-	} else {
-		c.litLookup[idx] = assignedTrue
-	}
+	c.g.Add(z.Dimacs2Lit(lit))
+	c.g.Add(0)
 }
 
-func (c *CNF) lookupTrue(lit int) bool {
-	idx := getLitLookupIdx(lit)
-	if idx >= len(c.litLookup) {
-		// log.Println("lookup out of bound", lit, len(c.litLookup))
-		return false
-	}
-
-	if lit < 0 {
-		return c.litLookup[idx] == assignedFalse
-
-	}
-	return c.litLookup[idx] == assignedTrue
-}
-
-func (c *CNF) requestLiterals(num int) []int {
-	lits := makeRange(int(c.nbVar)+1, int(c.nbVar)+num)
-	c.nbVar += int32(num)
+func (c *CNF) requestLiterals(num uint32) []int {
+	lits := makeRange(c.nbVar+1, c.nbVar+num)
+	c.nbVar += num
 	return lits
 }
 
-func (c *CNF) setInitialNbVar(nbVar int) {
-	c.nbVar = int32(nbVar)
-	c.lookupLen = nbVar
-}
-
 func (c *CNF) addClause(clause []int) {
-	c.Clauses = append(c.Clauses, clause)
-}
-
-func (c *CNF) addClauses(clauses [][]int) {
-	c.Clauses = append(c.Clauses, clauses...)
+	for _, lit := range clause {
+		c.g.Add(z.Dimacs2Lit(lit))
+	}
+	c.g.Add(0)
 }
 
 func (c *CNF) addFormula(lits []int, builder CNFBuilder) {
-	// log.Println("exactly one", lits)
-	formula := builder(c, lits)
-	c.addClauses(formula)
+	builder(c, lits)
 }
 
 func (c *CNF) getBoard() *sudoku.Board {
 	return c.Board
 }
 
-func (c *CNF) getLits() []int {
-	return c.lits
-}
-
-func (c *CNF) getClauses() [][]int {
-	clauses := make([][]int, 0, len(c.Clauses)+len(c.lits))
-	for i := 0; i < len(c.lits); i++ {
-		clauses = append(clauses, c.lits[i:i+1])
-	}
-	clauses = append(clauses, c.Clauses...)
-	return clauses
-}
-
 func (c *CNF) Print(w io.Writer) {
-	clauses := c.getClauses()
-	fmt.Fprintf(w, "p cnf %d %d\n", c.nbVar, len(clauses))
-	for _, c := range clauses {
-		for _, l := range c {
-			fmt.Fprint(w, l, " ")
-		}
-		fmt.Fprintln(w, 0)
-	}
-}
-
-func getLitLookupIdx(lit int) int {
-	if lit < 0 {
-		return -lit - 1
-	}
-	return lit - 1
+	c.g.Write(w)
 }

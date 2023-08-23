@@ -8,6 +8,7 @@ test: sudoku sudokusolver
 	go test -cover ./...
 
 bench: sudokusolver
+	if ! command -v cadical &> /dev/null; then echo "[!] Please install cadical first: $$(tput bold)brew install cadical$$(tput sgr0)"; exit 1; fi
 	go test -run=XXX -benchmem -bench=. ./sudokusolver
 
 benchprofile:

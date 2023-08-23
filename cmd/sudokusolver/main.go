@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 
+	"github.com/irifrance/gini"
 	"github.com/rkkautsar/sudoku-solver/sudoku"
 	"github.com/rkkautsar/sudoku-solver/sudokusolver"
 )
@@ -76,7 +77,8 @@ func solve(mode, input string) {
 	board := sudoku.NewFromString(input)
 
 	if mode == "cnf" {
-		cnf := sudokusolver.GenerateCNFConstraints(board)
+		g := gini.New()
+		cnf := sudokusolver.GenerateCNFConstraints(board, g)
 		writer := bufio.NewWriter(os.Stdout)
 		cnf.Print(writer)
 		writer.Flush()
