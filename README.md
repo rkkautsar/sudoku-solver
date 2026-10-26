@@ -1,7 +1,5 @@
 # SAT-based Sudoku Solver
 
-A rewrite of a side project: https://github.com/rkkautsar/sudoku-solver-nim
-
 ## Description
 
 A general n &times; n Sudoku solver that works by encoding the constraints to SAT and use SAT solver to solve it.
